@@ -103,14 +103,15 @@ Two charts depart from the obvious choice for honesty reasons. The inventory sca
 | `index.html` | The dashboard. Self-contained; open it directly or view the live link above. |
 | `build_data.py` | Reads the source workbook and builds the compact JSON model, with reconciliation checks against the workbook totals. |
 | `dashboard_template.html` | The dashboard source with a `/*__DATA__*/` placeholder in place of the data. |
+| `build_page.py` | Injects the data into the template and wraps the result in a complete HTML document. |
 | `dashboard_data.json` | The generated data model (1,800 plans with 36 months of history and 12 of forecast each). |
 | `docs/` | Page screenshots. |
 
 ### Rebuilding after the workbook changes
 
 ```bash
-python build_data.py            # regenerates dashboard_data.json and prints reconciliation checks
-python -c "open('index.html','w',encoding='utf-8').write(open('dashboard_template.html',encoding='utf-8').read().replace('/*__DATA__*/', open('dashboard_data.json',encoding='utf-8').read()))"
+python build_data.py    # regenerates dashboard_data.json, printing reconciliation checks against the workbook
+python build_page.py    # injects the data into the template and writes index.html
 ```
 
 `build_data.py` requires `pandas` and `openpyxl`, and expects the source workbook alongside it.
