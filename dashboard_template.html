@@ -1,0 +1,1575 @@
+<title>Aerospace Materials Control Tower</title>
+<style>
+/* ============================ tokens ============================ */
+:root{
+  color-scheme: light;
+  --bg:#e9edf3; --surface:#ffffff; --surface-2:#f4f6fa; --surface-3:#eaeef4;
+  --ink:#0d1520; --ink-2:#4d5a6a; --ink-3:#78859a;
+  --grid:#e4e8ef; --rule:#d5dce5; --ring:rgba(13,21,32,.10);
+  --accent:#2a78d6; --accent-ink:#1c5cab; --accent-wash:rgba(42,120,214,.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s8:#e34948;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b;
+  --good-ink:#0a7d0a; --warn-ink:#8a6100; --crit-ink:#b02f2f;
+  --good-wash:rgba(12,163,12,.10); --warn-wash:rgba(250,178,25,.16); --crit-wash:rgba(208,59,59,.10);
+  --shadow:0 1px 2px rgba(13,21,32,.06), 0 4px 14px rgba(13,21,32,.05);
+  --sans:ui-sans-serif,system-ui,"Segoe UI Variable Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#080b10; --surface:#141a23; --surface-2:#1b222c; --surface-3:#222a36;
+    --ink:#eef2f7; --ink-2:#a8b4c3; --ink-3:#7a8698;
+    --grid:#212a36; --rule:#2b3542; --ring:rgba(255,255,255,.10);
+    --accent:#3987e5; --accent-ink:#8fbdf3; --accent-wash:rgba(57,135,229,.16);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s8:#e66767;
+    --good-ink:#3ec13e; --warn-ink:#fab219; --crit-ink:#e56a6a;
+    --good-wash:rgba(12,163,12,.16); --warn-wash:rgba(250,178,25,.16); --crit-wash:rgba(208,59,59,.18);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#080b10; --surface:#141a23; --surface-2:#1b222c; --surface-3:#222a36;
+  --ink:#eef2f7; --ink-2:#a8b4c3; --ink-3:#7a8698;
+  --grid:#212a36; --rule:#2b3542; --ring:rgba(255,255,255,.10);
+  --accent:#3987e5; --accent-ink:#8fbdf3; --accent-wash:rgba(57,135,229,.16);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s8:#e66767;
+  --good-ink:#3ec13e; --warn-ink:#fab219; --crit-ink:#e56a6a;
+  --good-wash:rgba(12,163,12,.16); --warn-wash:rgba(250,178,25,.16); --crit-wash:rgba(208,59,59,.18);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+     font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;text-wrap:balance}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+/* ============================ shell ============================ */
+.app{display:grid;grid-template-columns:214px 1fr;min-height:100vh}
+
+.rail{background:var(--surface);border-right:1px solid var(--rule);
+      display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{padding:18px 16px 16px;border-bottom:1px solid var(--rule)}
+.brand .mark{display:flex;align-items:center;gap:9px}
+.brand .glyph{width:22px;height:22px;flex:none;color:var(--accent)}
+.brand .name{font-size:13.5px;font-weight:640;letter-spacing:-.01em;line-height:1.2}
+.brand .sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;
+            color:var(--ink-3);margin-top:7px}
+.nav{padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.nav-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;
+         color:var(--ink-3);padding:10px 8px 5px}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 9px;
+            background:none;border:0;border-radius:5px;cursor:pointer;color:var(--ink-2);
+            font-size:13px;font-weight:500}
+.nav button .step{font-family:var(--mono);font-size:10px;color:var(--ink-3);width:12px;flex:none}
+.nav button:hover{background:var(--surface-2);color:var(--ink)}
+.nav button[aria-current="true"]{background:var(--accent-wash);color:var(--accent-ink);font-weight:600}
+.nav button[aria-current="true"] .step{color:var(--accent-ink)}
+.rail-foot{margin-top:auto;padding:12px 14px;border-top:1px solid var(--rule);
+           font-size:11px;color:var(--ink-3);line-height:1.5}
+.rail-foot b{color:var(--ink-2);font-weight:600}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:1px solid var(--rule)}
+.topbar-row{display:flex;align-items:center;gap:16px;padding:13px 22px 12px}
+.page-title{font-size:17px;font-weight:640;letter-spacing:-.015em}
+.page-sub{font-size:12px;color:var(--ink-3);margin-top:1px}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.scope{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);
+       background:var(--surface-2);border:1px solid var(--rule);border-radius:4px;padding:4px 9px}
+.icon-btn{background:var(--surface-2);border:1px solid var(--rule);border-radius:5px;
+          padding:5px 9px;cursor:pointer;font-size:12px;color:var(--ink-2)}
+.icon-btn:hover{border-color:var(--ink-3);color:var(--ink)}
+
+/* filter bar */
+.filters{display:flex;align-items:center;gap:8px;padding:0 22px 11px;flex-wrap:wrap}
+.filters .flabel{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;
+                 color:var(--ink-3);margin-right:2px}
+.slicer{position:relative}
+.slicer>button{display:flex;align-items:center;gap:7px;background:var(--surface-2);
+  border:1px solid var(--rule);border-radius:5px;padding:5px 9px;cursor:pointer;font-size:12.5px}
+.slicer>button:hover{border-color:var(--ink-3)}
+.slicer>button .k{color:var(--ink-3)}
+.slicer>button .v{font-weight:560}
+.slicer>button .caret{color:var(--ink-3);font-size:9px}
+.slicer.on>button{background:var(--accent-wash);border-color:var(--accent);color:var(--accent-ink)}
+.slicer.on>button .k{color:var(--accent-ink);opacity:.8}
+.panel{position:absolute;top:calc(100% + 5px);left:0;z-index:60;width:236px;background:var(--surface);
+  border:1px solid var(--rule);border-radius:7px;box-shadow:var(--shadow);padding:8px;display:none}
+.slicer[data-open="1"] .panel{display:block}
+.panel input[type=search]{width:100%;padding:6px 8px;border:1px solid var(--rule);border-radius:5px;
+  background:var(--surface-2);color:var(--ink);font:inherit;font-size:12.5px;margin-bottom:6px}
+.opts{max-height:236px;overflow-y:auto;display:flex;flex-direction:column;gap:1px}
+.opts label{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:4px;cursor:pointer;font-size:12.5px}
+.opts label:hover{background:var(--surface-2)}
+.opts label span.c{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+.opts input{accent-color:var(--accent);margin:0}
+.panel-foot{display:flex;gap:6px;padding-top:7px;margin-top:6px;border-top:1px solid var(--rule)}
+.panel-foot button{flex:1;background:var(--surface-2);border:1px solid var(--rule);border-radius:4px;
+  padding:4px;font-size:11.5px;cursor:pointer;color:var(--ink-2)}
+.panel-foot button:hover{color:var(--ink);border-color:var(--ink-3)}
+
+/* ============================ page ============================ */
+.page{padding:18px 22px 40px;display:none;flex-direction:column;gap:16px}
+.page.on{display:flex}
+.band{display:flex;align-items:baseline;gap:10px;margin-bottom:-6px}
+.band h2{font-size:11px;font-family:var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.band .hint{font-size:11.5px;color:var(--ink-3)}
+.band .rulefill{flex:1;height:1px;background:var(--rule)}
+
+.kpis{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
+.kpi{background:var(--surface);border:1px solid var(--rule);border-radius:7px;padding:11px 13px 12px;
+     position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2.5px;background:var(--accent);opacity:.55}
+.kpi.k-good::before{background:var(--good)} .kpi.k-warn::before{background:var(--warn)}
+.kpi.k-crit::before{background:var(--crit)} .kpi.k-mute::before{background:var(--ink-3);opacity:.35}
+.kpi .lbl{font-size:11.5px;color:var(--ink-2);font-weight:520;letter-spacing:.005em;
+          display:flex;align-items:center;gap:5px;min-height:32px}
+.kpi .val{font-size:25px;font-weight:660;letter-spacing:-.025em;margin-top:5px;line-height:1.05}
+.kpi .val.sm{font-size:21px}
+.kpi .foot{font-size:11px;color:var(--ink-3);margin-top:4px;display:flex;align-items:center;gap:5px}
+.kpi .foot .delta{font-weight:600}
+.delta.up{color:var(--good-ink)} .delta.down{color:var(--crit-ink)} .delta.flat{color:var(--ink-3)}
+.info{width:13px;height:13px;flex:none;border-radius:50%;border:1px solid var(--ink-3);color:var(--ink-3);
+      font-size:9px;line-height:11px;text-align:center;cursor:help;opacity:.7}
+.info:hover{opacity:1;border-color:var(--accent);color:var(--accent)}
+
+.grid{display:grid;gap:14px;align-items:start}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-58{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
+.g-73{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+@media(max-width:1180px){.g-2,.g-3,.g-58,.g-73{grid-template-columns:minmax(0,1fr)}}
+
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;box-shadow:var(--shadow);
+      display:flex;flex-direction:column;min-width:0}
+.card-hd{padding:12px 14px 9px;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.card-hd h3{font-size:13.5px;font-weight:620;letter-spacing:-.008em}
+.card-hd .sub{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.card-hd .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.card-bd{padding:0 14px 13px;min-width:0}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.legend .ln{width:13px;height:2.5px;border-radius:2px}
+.chart{width:100%}
+.crumbs{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-3);flex-wrap:wrap}
+.crumbs button{background:none;border:0;padding:2px 4px;border-radius:4px;cursor:pointer;
+  color:var(--accent-ink);font-size:11.5px;font-weight:560}
+.crumbs button:hover{background:var(--accent-wash)}
+.crumbs .sep{opacity:.5}
+.crumbs .now{color:var(--ink);font-weight:600;font-family:var(--mono);font-size:11px}
+.hint-inline{font-size:11px;color:var(--ink-3);font-style:italic}
+
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--rule);border-radius:5px;overflow:hidden}
+.seg button{background:none;border:0;padding:4px 9px;font-size:11.5px;cursor:pointer;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;
+  box-shadow:inset 0 0 0 1px var(--rule)}
+select.mini{background:var(--surface-2);border:1px solid var(--rule);border-radius:5px;padding:4px 7px;
+  font:inherit;font-size:12px;color:var(--ink);font-family:var(--mono);max-width:170px}
+
+/* ============================ tables ============================ */
+.twrap{overflow:auto;max-height:560px;border-top:1px solid var(--rule)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px}
+thead th{position:sticky;top:0;z-index:2;background:var(--surface-2);text-align:right;
+  padding:8px 10px;font-size:10.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;
+  color:var(--ink-2);border-bottom:1px solid var(--rule);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:first-child,thead th.l{text-align:left}
+thead th:hover{color:var(--ink)}
+thead th .ar{color:var(--accent);margin-left:3px;font-size:9px}
+tbody td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);
+  font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink-2)}
+tbody td.l{text-align:left}
+tbody td.key{font-family:var(--mono);font-size:11.5px;color:var(--ink);font-weight:500}
+tbody td.strong{color:var(--ink);font-weight:600}
+tbody tr:hover td{background:var(--surface-2)}
+tbody tr.sev-a td:first-child{box-shadow:inset 3px 0 0 var(--crit)}
+tbody tr.sev-b td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+tbody tr.sev-c td:first-child{box-shadow:inset 3px 0 0 var(--rule)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:1.5px 7px;border-radius:20px;
+  font-size:10.5px;font-weight:620;letter-spacing:.01em}
+.pill.crit{background:var(--crit-wash);color:var(--crit-ink)}
+.pill.good{background:var(--good-wash);color:var(--good-ink)}
+.pill.warn{background:var(--warn-wash);color:var(--warn-ink)}
+.pill.mute{background:var(--surface-3);color:var(--ink-3)}
+.chip{display:inline-block;width:17px;text-align:center;border-radius:3px;font-family:var(--mono);
+  font-size:10.5px;font-weight:700;padding:1px 0}
+.chip.A{background:var(--crit-wash);color:var(--crit-ink)}
+.chip.B{background:var(--warn-wash);color:var(--warn-ink)}
+.chip.C{background:var(--surface-3);color:var(--ink-3)}
+td.heat{position:relative;isolation:isolate}
+td.heat i{position:absolute;inset:2px 4px;border-radius:3px;z-index:-1}
+.tfoot{padding:8px 14px;font-size:11px;color:var(--ink-3);border-top:1px solid var(--rule);
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.tfoot .k{font-family:var(--mono)}
+
+/* data bar inside cells */
+.bar-cell{position:relative}
+.bar-cell b{position:absolute;left:4px;top:4px;bottom:4px;background:var(--accent-wash);border-radius:2px;z-index:0}
+.bar-cell span{position:relative;z-index:1}
+
+/* ============================ tooltip ============================ */
+#tip{position:fixed;z-index:999;pointer-events:none;background:var(--surface);color:var(--ink);
+  border:1px solid var(--rule);border-radius:6px;box-shadow:var(--shadow);padding:8px 10px;
+  font-size:12px;max-width:290px;opacity:0;transition:opacity .09s;line-height:1.45}
+#tip.on{opacity:1}
+#tip .th{font-family:var(--mono);font-size:11px;color:var(--ink);font-weight:600;margin-bottom:4px;
+  padding-bottom:4px;border-bottom:1px solid var(--grid)}
+#tip .tr{display:flex;gap:14px;justify-content:space-between}
+#tip .tr .n{color:var(--ink-3)}
+#tip .tr .v{font-variant-numeric:tabular-nums;font-weight:600}
+#tip .tn{color:var(--ink-3);font-size:11px;margin-top:5px;font-style:italic}
+#tip i.sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:0}
+
+.empty{padding:34px 14px;text-align:center;color:var(--ink-3);font-size:13px}
+.note{background:var(--surface-2);border:1px solid var(--rule);border-left:2.5px solid var(--accent);
+  border-radius:6px;padding:10px 13px;font-size:12px;color:var(--ink-2);line-height:1.55}
+.note b{color:var(--ink);font-weight:600}
+svg text{font-family:var(--sans)}
+svg .tick{font-family:var(--mono);font-size:9.5px;fill:var(--ink-3)}
+svg .lab{font-size:11px;fill:var(--ink-2)}
+svg .val{font-size:10.5px;fill:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media(max-width:860px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto;border-right:0;border-bottom:1px solid var(--rule)}
+  .brand{border-bottom:0;border-right:1px solid var(--rule);flex:none}
+  .brand .sub{display:none}
+  .nav{flex-direction:row;padding:8px}.nav-lbl,.rail-foot{display:none}
+  .page,.topbar-row,.filters{padding-left:14px;padding-right:14px}
+}
+</style>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark">
+        <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M12 2 2.5 14.5h6L12 22l3.5-7.5h6z" stroke-linejoin="round"/>
+        </svg>
+        <div class="name">Materials<br>Control Tower</div>
+      </div>
+      <div class="sub">MRO Planning · FY2025</div>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="nav-lbl">Planning cycle</div>
+      <button data-page="p1" aria-current="true"><span class="step">01</span>Executive Overview</button>
+      <button data-page="p2"><span class="step">02</span>Demand Forecast</button>
+      <button data-page="p3"><span class="step">03</span>Inventory &amp; Replenishment</button>
+      <button data-page="p4"><span class="step">04</span>Supplier Performance</button>
+    </nav>
+    <div class="rail-foot">
+      <b>1,800</b> part–site plans<br>
+      <b>300</b> parts · <b>6</b> sites · <b>40</b> suppliers<br>
+      Position dated <b>23 Dec 2024</b>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-row">
+        <div>
+          <div class="page-title" id="ptitle">Executive Overview</div>
+          <div class="page-sub" id="psub">Where supply risk sits today, and what it will cost to close it</div>
+        </div>
+        <div class="topbar-actions">
+          <span class="scope" id="scope">1,800 of 1,800 part–site plans</span>
+          <button class="icon-btn" id="theme" title="Switch light / dark">◐</button>
+        </div>
+      </div>
+      <div class="filters" id="filters">
+        <span class="flabel">Filter</span>
+      </div>
+    </header>
+
+    <!-- ================= PAGE 1 ================= -->
+    <section class="page on" id="p1">
+      <div class="band"><h2>Demand</h2><span class="hint">2025 plan against 2024 actuals</span><span class="rulefill"></span></div>
+      <div class="kpis" id="k1a"></div>
+      <div class="band"><h2>Inventory &amp; replenishment</h2><span class="hint">Position as at 23 Dec 2024</span><span class="rulefill"></span></div>
+      <div class="kpis" id="k1b"></div>
+      <div class="band"><h2>Supplier reliability</h2><span class="hint">All purchase orders, 2022–2024</span><span class="rulefill"></span></div>
+      <div class="kpis" id="k1c"></div>
+
+      <div class="grid g-73">
+        <div class="card">
+          <div class="card-hd">
+            <div><h3>Demand is falling into 2025</h3>
+              <div class="sub">Monthly consumption Jan-2022 to Dec-2024, then the 2025 forecast</div></div>
+            <div class="right legend">
+              <span><i class="ln" style="background:var(--s1)"></i>Actual consumption</span>
+              <span><i class="ln" style="background:var(--s2)"></i>2025 forecast</span>
+            </div>
+          </div>
+          <div class="card-bd"><div class="chart" id="c-trend"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><h3>Materials requiring replenishment</h3>
+            <div class="sub">Part–site plans below their reorder point</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-status"></div></div>
+        </div>
+      </div>
+
+      <div class="grid g-2">
+        <div class="card">
+          <div class="card-hd">
+            <div><h3>Where the replenishment need sits</h3>
+              <div class="sub">Recommended order quantity — click a bar to drill in</div></div>
+            <div class="right"><div class="crumbs" id="crumb-1"></div></div>
+          </div>
+          <div class="card-bd"><div class="chart" id="c-drill1"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div><h3>Top replenishment requirements</h3>
+              <div class="sub">Ten part–site plans with the largest recommended order</div></div>
+            <div class="right legend">
+              <span><i style="background:var(--crit)"></i>A — flight critical</span>
+              <span><i style="background:var(--warn)"></i>B</span>
+              <span><i style="background:var(--s1)"></i>C</span>
+            </div>
+          </div>
+          <div class="card-bd"><div class="chart" id="c-top10"></div></div>
+        </div>
+      </div>
+
+      <div class="grid g-58">
+        <div class="card">
+          <div class="card-hd">
+            <div><h3>Inventory at risk</h3>
+              <div class="sub">Inventory position against reorder point — anything under the parity line must be ordered</div></div>
+            <div class="right legend">
+              <span><i style="background:var(--crit)"></i>Reorder</span>
+              <span><i style="background:var(--good)"></i>OK</span>
+            </div>
+          </div>
+          <div class="card-bd"><div class="chart" id="c-scatter"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><h3>Supplier delivery reliability</h3>
+            <div class="sub">Ten weakest suppliers by on-time delivery</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-supbot"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <div><h3>High-risk materials requiring management attention</h3>
+            <div class="sub">Ranked by supply-risk score — criticality, cover against lead time, and supplier lateness combined</div></div>
+          <div class="right"><span class="hint-inline" id="risk-note"></span></div>
+        </div>
+        <div class="twrap" id="t-risk"></div>
+        <div class="tfoot">
+          <span><b>Risk score</b> = 40 × criticality weight (A 1.0 · B 0.6 · C 0.3) + 35 × cover deficit vs lead time + 25 × supplier late share.</span>
+          <span class="k">Derived for this dashboard — not a field in the workbook.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 2 ================= -->
+    <section class="page" id="p2">
+      <div class="kpis" id="k2"></div>
+      <div class="note" id="n2"></div>
+
+      <div class="card">
+        <div class="card-hd">
+          <div><h3>Three years of consumption, and where the plan lands</h3>
+            <div class="sub">Actual monthly consumption to Dec-2024; 2025 forecast shaded</div></div>
+          <div class="right legend">
+            <span><i class="ln" style="background:var(--s1)"></i>Actual consumption</span>
+            <span><i class="ln" style="background:var(--s2)"></i>2025 forecast</span>
+          </div>
+        </div>
+        <div class="card-bd"><div class="chart" id="c-hist"></div></div>
+      </div>
+
+      <div class="grid g-2">
+        <div class="card">
+          <div class="card-hd"><div><h3>Parts with rising demand</h3>
+            <div class="sub">Largest forecast increases vs 2024 · plans with ≥ 24 units of 2024 demand</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-up"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><h3>Parts with falling demand</h3>
+            <div class="sub">Largest forecast decreases vs 2024 · candidates for stock release</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-down"></div></div>
+        </div>
+      </div>
+
+      <div class="grid g-2">
+        <div class="card">
+          <div class="card-hd">
+            <div><h3>Demand by part family</h3><div class="sub">2024 actual against 2025 forecast</div></div>
+            <div class="right legend">
+              <span><i style="background:var(--s1)"></i>2024 actual</span>
+              <span><i style="background:var(--s2)"></i>2025 forecast</span></div>
+          </div>
+          <div class="card-bd"><div class="chart" id="c-fam"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div><h3>Demand by site</h3><div class="sub">2024 actual against 2025 forecast</div></div>
+            <div class="right legend">
+              <span><i style="background:var(--s1)"></i>2024 actual</span>
+              <span><i style="background:var(--s2)"></i>2025 forecast</span></div>
+          </div>
+          <div class="card-bd"><div class="chart" id="c-site"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <div><h3>Inspect a single part–site plan</h3>
+            <div class="sub">36 months of consumption and the 12-month forecast for one combination</div></div>
+          <div class="right">
+            <select class="mini" id="sel-ps"></select>
+            <div class="legend"><span><i class="ln" style="background:var(--s1)"></i>Actual</span>
+              <span><i class="ln" style="background:var(--s2)"></i>Forecast</span></div>
+          </div>
+        </div>
+        <div class="card-bd"><div class="chart" id="c-one"></div><div id="one-facts" class="kpis" style="margin-top:12px"></div></div>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 3 ================= -->
+    <section class="page" id="p3">
+      <div class="kpis" id="k3"></div>
+
+      <div class="grid g-58">
+        <div class="card">
+          <div class="card-hd"><div><h3>How long cover lasts</h3>
+            <div class="sub">Months of cover from usable stock — under one month is a stockout inside most lead times · cover above 12 months sits in the final bar</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-cover"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div><h3>Position against reorder point and target</h3>
+              <div class="sub">Twelve largest replenishment requirements</div></div>
+            <div class="right legend">
+              <span><i style="background:var(--s1)"></i>Inventory position</span>
+              <span><i style="background:var(--s2)"></i>Reorder point</span>
+              <span><i style="background:var(--s3)"></i>Target stock</span></div>
+          </div>
+          <div class="card-bd"><div class="chart" id="c-ipt"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <div><h3>Material planning worksheet</h3>
+            <div class="sub">Reorder items first, highest criticality first — the order to work the list in</div></div>
+          <div class="right">
+            <div class="seg" id="seg-plan">
+              <button data-f="reorder" aria-pressed="true">Reorder only</button>
+              <button data-f="lowcover" aria-pressed="false">Low cover</button>
+              <button data-f="all" aria-pressed="false">All plans</button>
+            </div>
+          </div>
+        </div>
+        <div class="twrap" id="t-plan"></div>
+        <div class="tfoot">
+          <span><span class="pill crit">Reorder</span> position at or below reorder point</span>
+          <span><span class="pill warn">Watch</span> within 15% of the reorder point, or under 1 month of cover</span>
+          <span><span class="pill good">OK</span> adequately stocked</span>
+          <span class="k" id="plan-count"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 4 ================= -->
+    <section class="page" id="p4">
+      <div class="kpis" id="k4"></div>
+      <div class="note" id="n4"></div>
+
+      <div class="grid g-2">
+        <div class="card">
+          <div class="card-hd"><div><h3>Suppliers that deliver late</h3>
+            <div class="sub">On-time delivery — twelve weakest</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-otd"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><h3>Suppliers that under-ship</h3>
+            <div class="sub">Fill rate — twelve weakest · axis starts at 93% so the spread is visible</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-fill"></div></div>
+        </div>
+      </div>
+
+      <div class="grid g-2">
+        <div class="card">
+          <div class="card-hd"><div><h3>How late, when they are late</h3>
+            <div class="sub">Average days past the promised date on late orders — twelve worst</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-late"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div><h3>Planned against actual lead time</h3>
+              <div class="sub">Twelve suppliers with the largest gap to their planning lead time</div></div>
+            <div class="right legend">
+              <span><i style="background:var(--s1)"></i>Planned</span>
+              <span><i style="background:var(--s2)"></i>Actual</span></div>
+          </div>
+          <div class="card-bd"><div class="chart" id="c-lt"></div></div>
+        </div>
+      </div>
+
+      <div class="grid g-2">
+        <div class="card">
+          <div class="card-hd"><div><h3>Lead-time variance</h3>
+            <div class="sub">Average days actual lead time runs over the planned figure</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-var"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><h3>Quantity shortfall</h3>
+            <div class="sub">Units ordered but never received — twelve largest</div></div></div>
+          <div class="card-bd"><div class="chart" id="c-short"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <div><h3>Supplier scorecard</h3>
+            <div class="sub">Every supplier in scope, weakest delivery reliability first</div></div>
+        </div>
+        <div class="twrap" id="t-sup"></div>
+        <div class="tfoot">
+          <span>Cells shaded against the portfolio average — <span class="pill crit">red</span> below,
+            <span class="pill good">green</span> above.</span>
+          <span class="k">On-time = receipt on or before the promised date. Avg late days counts late orders only.</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="tip" role="tooltip" aria-hidden="true"></div>
+
+<script>
+const RAW = /*__DATA__*/;
+</script>
+<script>
+"use strict";
+/* ==================================================================
+   Aerospace Materials Control Tower
+   Every measure below is either a column of the source workbook or an
+   aggregation of one. Derived measures (risk score, backtest MAE,
+   watch band) are labelled as derived wherever they appear.
+================================================================== */
+
+const CI = {}; RAW.cols.forEach((c,i)=>CI[c]=i);
+const ROWS = RAW.rows.map(r=>{const o={};RAW.cols.forEach((c,i)=>o[c]=r[i]);o.key=o.part+"-"+o.site;return o;});
+const HM = RAW.histMonths, FM = RAW.fcstMonths, ALLM = HM.concat(FM);
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const mlab = m => MON[+m.slice(5,7)-1]+" "+m.slice(2,4);
+
+/* ---------------- formatting ---------------- */
+const f0 = n => (n==null||!isFinite(n)) ? "–" : Math.round(n).toLocaleString("en-US");
+const f1 = n => (n==null||!isFinite(n)) ? "–" : n.toFixed(1);
+const f2 = n => (n==null||!isFinite(n)) ? "–" : n.toFixed(2);
+const pct = (n,d=1) => (n==null||!isFinite(n)) ? "–" : (n*100).toFixed(d)+"%";
+const sgn = (n,d=1) => (n==null||!isFinite(n)) ? "–" : (n>=0?"+":"")+(n*100).toFixed(d)+"%";
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------------- filter state ---------------- */
+const DIMS = [
+  {k:"family", label:"Part family"},
+  {k:"part",   label:"Part ID", search:true},
+  {k:"site",   label:"Site"},
+  {k:"crit",   label:"Criticality"},
+  {k:"sup",    label:"Supplier", search:true},
+];
+const F = {}; DIMS.forEach(d=>F[d.k]=new Set());
+let PAGE="p1", drill={p1:{lvl:0,family:null,part:null}, p2:{lvl:0,family:null,part:null}};
+let planFilter="reorder", sorts={};
+
+const passes = (r,skip) => DIMS.every(d => d.k===skip || !F[d.k].size || F[d.k].has(r[d.k]));
+let VIEW = ROWS;
+const recompute = () => { VIEW = ROWS.filter(r=>passes(r)); };
+
+/* ---------------- aggregation ---------------- */
+const sum = (rs,k) => rs.reduce((a,r)=>a+(r[k]||0),0);
+const LTM = r => r.lt/30.4375;                       // lead time expressed in months
+
+function summarise(rs){
+  const s = {
+    n: rs.length,
+    ftot: sum(rs,"ftot"), atot: sum(rs,"atot"),
+    usable: sum(rs,"usable"), duein: sum(rs,"duein"), pos: sum(rs,"pos"),
+    back: sum(rs,"backorder"), blocked: sum(rs,"blocked"), onhand: sum(rs,"onhand"),
+    ss: sum(rs,"ss"), rop: sum(rs,"rop"), tgt: sum(rs,"tgt"), rec: sum(rs,"rec"),
+    avgfc: sum(rs,"avgfc"),
+    reorder: rs.filter(r=>r.status==="Reorder").length,
+    lowcover: rs.filter(r=>r.avgfc>0 && r.cover < LTM(r)).length,
+    poN: sum(rs,"po_n"), poOn: sum(rs,"po_ontime"),
+    lateSum: sum(rs,"late_sum"), lateN: sum(rs,"late_n"),
+    altSum: sum(rs,"alt_sum"), varSum: sum(rs,"var_sum"),
+    ordered: sum(rs,"ordered"), received: sum(rs,"received"), shortfall: sum(rs,"shortfall"),
+  };
+  s.chg      = s.atot ? s.ftot/s.atot - 1 : null;
+  s.cover    = s.avgfc ? s.usable/s.avgfc : null;
+  s.otd      = s.poN ? s.poOn/s.poN : null;
+  s.fill     = s.ordered ? s.received/s.ordered : null;
+  s.avgLate  = s.lateN ? s.lateSum/s.lateN : null;
+  s.avgALT   = s.poN ? s.altSum/s.poN : null;
+  s.avgVar   = s.poN ? s.varSum/s.poN : null;
+  s.avgPlan  = s.poN ? (s.altSum-s.varSum)/s.poN : null;
+  s.hist = HM.map((_,i)=>rs.reduce((a,r)=>a+r.hist[i],0));
+  s.fcst = FM.map((_,i)=>rs.reduce((a,r)=>a+r.fcst[i],0));
+  const mean = s.hist.reduce((a,b)=>a+b,0)/s.hist.length;
+  s.std = Math.sqrt(s.hist.reduce((a,b)=>a+(b-mean)**2,0)/(s.hist.length-1));
+  s.mae = rs.length ? rs.reduce((a,r)=>a+r.mae,0)/rs.length : null;
+  return s;
+}
+function groupBy(rs,key){
+  const m = new Map();
+  rs.forEach(r=>{ const k=r[key]; if(!m.has(k)) m.set(k,[]); m.get(k).push(r); });
+  return [...m.entries()].map(([k,v])=>({key:k, rows:v, s:summarise(v)}));
+}
+const CW = {A:1, B:.6, C:.3};
+function risk(r, otdBySup){
+  const ltm = LTM(r) || 1;
+  const def = r.avgfc>0 ? Math.max(0, Math.min(1, 1 - r.cover/ltm)) : 0;
+  const late = 1 - (otdBySup.get(r.sup) ?? .5);
+  return 40*(CW[r.crit]||.3) + 35*def + 25*late;
+}
+/* watch band: not yet at the reorder point but within 15%, or under one month of cover */
+const band = r => r.status==="Reorder" ? "crit"
+  : (r.pos <= r.rop*1.15 || (r.avgfc>0 && r.cover<1)) ? "warn" : "good";
+
+/* ==================================================================
+   tooltip
+================================================================== */
+const TIP = document.getElementById("tip");
+function showTip(html, ev){
+  TIP.innerHTML = html; TIP.classList.add("on"); TIP.setAttribute("aria-hidden","false");
+  const r = TIP.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY + 16;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 12;
+  TIP.style.left = Math.max(8,x)+"px"; TIP.style.top = Math.max(8,y)+"px";
+}
+const hideTip = () => { TIP.classList.remove("on"); TIP.setAttribute("aria-hidden","true"); };
+const trow = (n,v,c) => `<div class="tr"><span class="n">${c?`<i class="sw" style="background:${c}"></i>`:""}${n}</span><span class="v">${v}</span></div>`;
+function bindTip(el, html){
+  el.addEventListener("mousemove", e=>showTip(typeof html==="function"?html():html, e));
+  el.addEventListener("mouseleave", hideTip);
+  el.setAttribute("tabindex","0");
+  el.addEventListener("focus", e=>{
+    const b=el.getBoundingClientRect();
+    showTip(typeof html==="function"?html():html,{clientX:b.left+b.width/2,clientY:b.bottom});
+  });
+  el.addEventListener("blur", hideTip);
+}
+document.addEventListener("scroll", hideTip, true);
+
+/* ==================================================================
+   SVG toolkit
+================================================================== */
+const NS="http://www.w3.org/2000/svg";
+function E(t,a={},p){const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+function mount(id,h,draw){
+  const host=document.getElementById(id); if(!host) return;
+  const render=()=>{
+    const w=host.clientWidth||760; host.textContent="";
+    const svg=E("svg",{width:"100%",height:h,viewBox:`0 0 ${w} ${h}`,role:"img"},host);
+    try{ draw(svg,w,h); }catch(err){ console.error(id,err); }
+  };
+  render();
+  if(!host._ro){ host._ro=new ResizeObserver(()=>{clearTimeout(host._t);host._t=setTimeout(render,80);}); host._ro.observe(host); }
+}
+/* Axis scales land on round numbers: pick a 1/2/2.5/5/10 step first,
+   then stretch the maximum up to a whole multiple of it. */
+function niceStep(raw){
+  if(!(raw>0)) return 1;
+  const e=Math.pow(10,Math.floor(Math.log10(raw))), n=raw/e;
+  return (n<=1?1:n<=2?2:n<=5?5:10)*e;
+}
+function scale(rawMax,count=4){
+  if(!(rawMax>0)) return {max:1,ticks:[0,1]};
+  const step=niceStep(rawMax/count), max=Math.ceil(rawMax/step-1e-9)*step, ticks=[];
+  for(let i=0;i*step<=max+1e-9;i++) ticks.push(+(i*step).toPrecision(12));
+  return {max,ticks};
+}
+function hitRect(svg,x,y,w,h,html,cls){
+  const r=E("rect",{x,y,width:Math.max(w,1),height:Math.max(h,1),fill:"transparent",class:cls},svg);
+  r.style.cursor="pointer"; bindTip(r,html); return r;
+}
+
+/* ---- horizontal bars: one series, optional status colour ---- */
+function barsH(id,items,opt={}){
+  const rowH=opt.rowH||22, padT=6, padB=opt.axis===false?4:20, labW=opt.labW||96, valW=opt.valW||54;
+  const h=padT+padB+items.length*rowH;
+  mount(id,Math.max(h,60),(svg,w)=>{
+    if(!items.length){E("text",{x:w/2,y:36,"text-anchor":"middle",class:"lab"},svg).textContent="No data in the current selection";return;}
+    const x0=labW, x1=w-valW;
+    const {max,ticks}=scale(Math.max(...items.map(d=>Math.abs(d.v)),1e-9));
+    const sx=v=>x0+(Math.abs(v)/max)*(x1-x0);
+    if(opt.axis!==false){
+      ticks.forEach(t=>{
+        const x=sx(t);
+        E("line",{x1:x,x2:x,y1:padT,y2:padT+items.length*rowH,stroke:css("--grid"),"stroke-width":1},svg);
+        E("text",{x,y:padT+items.length*rowH+13,"text-anchor":"middle",class:"tick"},svg).textContent=opt.fmt?opt.fmt(t):f0(t);
+      });
+    }
+    items.forEach((d,i)=>{
+      const y=padT+i*rowH, bh=Math.min(rowH-8,13), by=y+(rowH-bh)/2;
+      const col=d.color||opt.color||css("--s1");
+      const bw=Math.max(sx(d.v)-x0,1.5);
+      const p=E("path",{d:`M${x0},${by} H${x0+bw-Math.min(4,bw)} a4,4 0 0 1 4,4 v${bh-8} a4,4 0 0 1 -4,4 H${x0} Z`,fill:col},svg);
+      if(bw<6){p.remove();E("rect",{x:x0,y:by,width:bw,height:bh,fill:col},svg);}
+      const lt=E("text",{x:x0-8,y:y+rowH/2+3.5,"text-anchor":"end",class:"tick"},svg);
+      lt.textContent=d.label; lt.setAttribute("fill",css("--ink-2"));
+      E("text",{x:x0+bw+7,y:y+rowH/2+3.5,class:"val"},svg).textContent=opt.fmtV?opt.fmtV(d.v):f0(d.v);
+      const hr=hitRect(svg,0,y,w,rowH,d.tip);
+      if(d.onClick){hr.addEventListener("click",d.onClick);}
+    });
+  });
+}
+
+/* ---- horizontal grouped bars: n series ---- */
+function groupedH(id,items,series,opt={}){
+  const bh=opt.bh||9, gap=2, grpH=series.length*(bh+gap)+(opt.pad||14), padT=6, padB=20, labW=opt.labW||96, valW=opt.valW||52;
+  mount(id,padT+padB+items.length*grpH,(svg,w)=>{
+    if(!items.length){E("text",{x:w/2,y:36,"text-anchor":"middle",class:"lab"},svg).textContent="No data in the current selection";return;}
+    const x0=labW,x1=w-valW;
+    const {max,ticks}=scale(Math.max(...items.flatMap(d=>series.map(s=>d[s.k]||0)),1e-9));
+    const sx=v=>x0+(v/max)*(x1-x0);
+    ticks.forEach(t=>{
+      const x=sx(t);
+      E("line",{x1:x,x2:x,y1:padT,y2:padT+items.length*grpH,stroke:css("--grid"),"stroke-width":1},svg);
+      E("text",{x,y:padT+items.length*grpH+13,"text-anchor":"middle",class:"tick"},svg).textContent=opt.fmt?opt.fmt(t):f0(t);
+    });
+    items.forEach((d,i)=>{
+      const gy=padT+i*grpH+5;
+      const lt=E("text",{x:x0-8,y:gy+(series.length*(bh+gap))/2+1,"text-anchor":"end",class:"tick"},svg);
+      lt.textContent=d.label; lt.setAttribute("fill",css("--ink-2"));
+      series.forEach((s,j)=>{
+        const y=gy+j*(bh+gap), bw=Math.max(sx(d[s.k]||0)-x0,1.5);
+        E("rect",{x:x0,y,width:bw,height:bh,rx:Math.min(3,bw/2),fill:css(s.c)},svg);
+        if(j===series.length-1||opt.labelAll)
+          E("text",{x:x0+bw+6,y:y+bh-0.5,class:"val"},svg).textContent=opt.fmtV?opt.fmtV(d[s.k]):f0(d[s.k]);
+      });
+      hitRect(svg,0,padT+i*grpH,w,grpH,d.tip);
+    });
+  });
+}
+
+/* ---- time series: actual + forecast on one axis ---- */
+function timeSeries(id,months,actual,forecast,opt={}){
+  const H=opt.h||250;
+  mount(id,H,(svg,w)=>{
+    const L=48,R=14,T=12,B=26, pw=w-L-R, ph=H-T-B;
+    const n=months.length, all=actual.concat(forecast).filter(v=>v!=null);
+    const {max,ticks}=scale(Math.max(...all,1)*1.08);
+    const sx=i=>L+(n===1?pw/2:(i/(n-1))*pw), sy=v=>T+ph-(v/max)*ph;
+    const split=actual.length-1;
+    // forecast region
+    if(forecast.length){
+      E("rect",{x:sx(split),y:T,width:sx(n-1)-sx(split),height:ph,fill:css("--surface-2")},svg);
+      E("line",{x1:sx(split),x2:sx(split),y1:T,y2:T+ph,stroke:css("--rule"),"stroke-width":1},svg);
+      const fl=E("text",{x:sx(split)+7,y:T+11,class:"tick"},svg);
+      fl.textContent="FORECAST"; fl.setAttribute("fill",css("--ink-3")); fl.setAttribute("letter-spacing","1.2");
+    }
+    ticks.forEach(t=>{
+      E("line",{x1:L,x2:w-R,y1:sy(t),y2:sy(t),stroke:css("--grid"),"stroke-width":1},svg);
+      E("text",{x:L-7,y:sy(t)+3.5,"text-anchor":"end",class:"tick"},svg).textContent=f0(t);
+    });
+    E("line",{x1:L,x2:w-R,y1:T+ph,y2:T+ph,stroke:css("--rule"),"stroke-width":1},svg);
+    const every=Math.max(1,Math.ceil(n/(w<560?6:12)));
+    months.forEach((m,i)=>{ if(i%every) return;
+      E("text",{x:sx(i),y:T+ph+15,"text-anchor":"middle",class:"tick"},svg).textContent=mlab(m); });
+    const line=(vals,off,col,fill)=>{
+      const pts=vals.map((v,i)=>[sx(i+off),sy(v)]).filter(p=>isFinite(p[1]));
+      if(pts.length<1) return;
+      if(fill){
+        E("path",{d:`M${pts[0][0]},${T+ph} `+pts.map(p=>`L${p[0]},${p[1]}`).join(" ")+` L${pts.at(-1)[0]},${T+ph} Z`,
+          fill:col,opacity:.09},svg);
+      }
+      E("path",{d:"M"+pts.map(p=>`${p[0]},${p[1]}`).join(" L"),fill:"none",stroke:col,
+        "stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"},svg);
+    };
+    line(actual,0,css("--s1"),true);
+    if(forecast.length) line([actual.at(-1)].concat(forecast),split,css("--s2"),false);
+    // endpoint markers
+    E("circle",{cx:sx(split),cy:sy(actual.at(-1)),r:3.6,fill:css("--s1"),stroke:css("--surface"),"stroke-width":2},svg);
+    if(forecast.length)
+      E("circle",{cx:sx(n-1),cy:sy(forecast.at(-1)),r:3.6,fill:css("--s2"),stroke:css("--surface"),"stroke-width":2},svg);
+    // crosshair
+    const cl=E("line",{x1:0,x2:0,y1:T,y2:T+ph,stroke:css("--ink-3"),"stroke-width":1,opacity:0},svg);
+    const d1=E("circle",{r:4,fill:css("--s1"),stroke:css("--surface"),"stroke-width":2,opacity:0},svg);
+    const over=E("rect",{x:L,y:T,width:pw,height:ph,fill:"transparent"},svg);
+    over.style.cursor="crosshair";
+    over.addEventListener("mousemove",ev=>{
+      const bb=svg.getBoundingClientRect(), sc=w/bb.width;
+      const i=Math.max(0,Math.min(n-1,Math.round((((ev.clientX-bb.left)*sc)-L)/pw*(n-1))));
+      const isF=i>split, v=isF?forecast[i-split-1]:actual[i];
+      cl.setAttribute("x1",sx(i));cl.setAttribute("x2",sx(i));cl.setAttribute("opacity",".5");
+      d1.setAttribute("cx",sx(i));d1.setAttribute("cy",sy(v));d1.setAttribute("opacity","1");
+      d1.setAttribute("fill",isF?css("--s2"):css("--s1"));
+      showTip(`<div class="th">${mlab(months[i])}</div>`+
+        trow(isF?"Forecast":"Actual consumption",f0(v)+" units",isF?css("--s2"):css("--s1"))+
+        (opt.note?`<div class="tn">${opt.note}</div>`:""),ev);
+    });
+    over.addEventListener("mouseleave",()=>{cl.setAttribute("opacity",0);d1.setAttribute("opacity",0);hideTip();});
+  });
+}
+
+/* ---- scatter: position vs reorder point ---- */
+function scatter(id,pts,opt={}){
+  const H=opt.h||268;
+  mount(id,H,(svg,w)=>{
+    const L=54,R=16,T=14,B=36, pw=w-L-R, ph=H-T-B;
+    if(!pts.length){E("text",{x:w/2,y:H/2,"text-anchor":"middle",class:"lab"},svg).textContent="No data in the current selection";return;}
+    /* Both measures are heavily right-skewed (median 22 units, maximum 480), so a
+       linear axis buries the crowd near the origin. A square-root scale keeps every
+       point visible; because both axes share it, the parity line stays a straight
+       diagonal and "below the line = reorder" still reads correctly. */
+    const raw=Math.max(...pts.map(p=>Math.max(p.x,p.y)),1);
+    const max=niceStep(raw)>=raw?niceStep(raw):Math.ceil(raw/niceStep(raw/4))*niceStep(raw/4);
+    const sx=v=>L+Math.sqrt(Math.max(v,0)/max)*pw, sy=v=>T+ph-Math.sqrt(Math.max(v,0)/max)*ph;
+    const ticks=[0,10,25,50,100,200,400,800,1600].filter(t=>t<=max);
+    // only cap the axis with its own maximum when it will not crowd the last tick
+    const last=ticks[ticks.length-1];
+    if(Math.sqrt(max/max)-Math.sqrt(last/max)>.12) ticks.push(max);
+    ticks.forEach(t=>{
+      E("line",{x1:L,x2:w-R,y1:sy(t),y2:sy(t),stroke:css("--grid"),"stroke-width":1},svg);
+      E("line",{x1:sx(t),x2:sx(t),y1:T,y2:T+ph,stroke:css("--grid"),"stroke-width":1},svg);
+      E("text",{x:L-7,y:sy(t)+3.5,"text-anchor":"end",class:"tick"},svg).textContent=f0(t);
+      E("text",{x:sx(t),y:T+ph+14,"text-anchor":"middle",class:"tick"},svg).textContent=f0(t);
+    });
+    E("line",{x1:sx(0),x2:sx(max),y1:sy(0),y2:sy(max),stroke:css("--ink-3"),"stroke-width":1.25,opacity:.55},svg);
+    const pl=E("text",{x:sx(max)-8,y:sy(max)+15,"text-anchor":"end",class:"tick"},svg);
+    pl.textContent="position = reorder point"; pl.setAttribute("fill",css("--ink-3"));
+    const yl=E("text",{x:13,y:T+ph/2,class:"tick",transform:`rotate(-90 13 ${T+ph/2})`,"text-anchor":"middle"},svg);
+    yl.textContent="Reorder point (units)";
+    E("text",{x:L+pw/2,y:T+ph+30,"text-anchor":"middle",class:"tick"},svg).textContent="Inventory position (units) · square-root scale";
+    pts.forEach(p=>{
+      const c=E("circle",{cx:sx(p.x),cy:sy(p.y),r:p.r||3.2,fill:p.color,opacity:.7,
+        stroke:css("--surface"),"stroke-width":1.3},svg);
+      c.style.cursor="pointer"; bindTip(c,p.tip);
+    });
+  });
+}
+
+/* ---- histogram ---- */
+function histogram(id,vals,opt={}){
+  const H=opt.h||226, bins=opt.bins||14, cap=opt.cap||12;
+  mount(id,H,(svg,w)=>{
+    const L=40,R=14,T=10,B=34,pw=w-L-R,ph=H-T-B;
+    const bw=cap/bins, counts=new Array(bins).fill(0);
+    vals.forEach(v=>{counts[Math.max(0,Math.min(bins-1,Math.floor(v/bw)))]++;});
+    const {max,ticks}=scale(Math.max(...counts,1));
+    const sy=v=>T+ph-v/max*ph, x=i=>L+i/bins*pw, cw=pw/bins;
+    ticks.forEach(t=>{
+      E("line",{x1:L,x2:w-R,y1:sy(t),y2:sy(t),stroke:css("--grid"),"stroke-width":1},svg);
+      E("text",{x:L-7,y:sy(t)+3.5,"text-anchor":"end",class:"tick"},svg).textContent=f0(t);
+    });
+    // stockout zone
+    const zx=L+(1/cap)*pw;
+    E("rect",{x:L,y:T,width:zx-L,height:ph,fill:css("--crit"),opacity:.07},svg);
+    const zl=E("text",{x:zx+6,y:T+11,class:"tick"},svg);
+    zl.textContent="UNDER 1 MONTH"; zl.setAttribute("fill",css("--crit-ink")); zl.setAttribute("letter-spacing","1");
+    counts.forEach((c,i)=>{
+      const bx=x(i)+1, bwid=cw-2, top=sy(c), hgt=T+ph-top;
+      if(c>0) E("path",{d:`M${bx},${T+ph} V${top+4} a4,4 0 0 1 4,-4 h${bwid-8} a4,4 0 0 1 4,4 V${T+ph} Z`,
+        fill:(i*bw<1?css("--crit"):css("--s1"))},svg);
+      hitRect(svg,bx-1,T,cw,ph,`<div class="th">${f1(i*bw)} – ${f1((i+1)*bw)} months</div>`+
+        trow("Part–site plans",f0(c))+(i*bw<1?`<div class="tn">Stock runs out inside a month.</div>`:""));
+    });
+    [0,3,6,9,12].forEach(t=>E("text",{x:L+t/cap*pw,y:T+ph+15,"text-anchor":"middle",class:"tick"},svg).textContent=t);
+    E("text",{x:L+pw/2,y:T+ph+29,"text-anchor":"middle",class:"tick"},svg).textContent="Months of cover";
+  });
+}
+
+/* ---- dot plot: for values packed into a narrow band, where a zero-baseline
+   bar would show every supplier as the same full-length bar. The axis starts
+   above zero, which is safe here because the mark is a dot, not a length. ---- */
+function dotPlot(id,items,opt={}){
+  const rowH=opt.rowH||21, padT=8, padB=30, labW=opt.labW||66, valW=opt.valW||52;
+  mount(id,padT+padB+Math.max(items.length,1)*rowH,(svg,w)=>{
+    if(!items.length){E("text",{x:w/2,y:30,"text-anchor":"middle",class:"lab"},svg).textContent="No data in the current selection";return;}
+    const x0=labW,x1=w-valW;
+    const lo=opt.min, hi=opt.max, sx=v=>x0+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*(x1-x0);
+    const plotH=items.length*rowH;
+    (opt.ticks||[lo,(lo+hi)/2,hi]).forEach(t=>{
+      E("line",{x1:sx(t),x2:sx(t),y1:padT,y2:padT+plotH,stroke:css("--grid"),"stroke-width":1},svg);
+      E("text",{x:sx(t),y:padT+plotH+14,"text-anchor":"middle",class:"tick"},svg).textContent=opt.fmt?opt.fmt(t):f0(t);
+    });
+    if(opt.ref!=null&&opt.ref>=lo&&opt.ref<=hi){
+      E("line",{x1:sx(opt.ref),x2:sx(opt.ref),y1:padT,y2:padT+plotH,stroke:css("--ink-3"),"stroke-width":1.25,opacity:.6},svg);
+      const rl=E("text",{x:sx(opt.ref),y:padT+plotH+27,"text-anchor":"middle",class:"tick"},svg);
+      rl.textContent=opt.refLabel||""; rl.setAttribute("fill",css("--ink-3"));
+    }
+    items.forEach((d,i)=>{
+      const y=padT+i*rowH+rowH/2;
+      E("line",{x1:x0,x2:sx(d.v),y1:y,y2:y,stroke:css("--rule"),"stroke-width":1.5},svg);
+      E("circle",{cx:sx(d.v),cy:y,r:5,fill:d.color||css("--s1"),stroke:css("--surface"),"stroke-width":2},svg);
+      const lt=E("text",{x:x0-8,y:y+3.5,"text-anchor":"end",class:"tick"},svg);
+      lt.textContent=d.label; lt.setAttribute("fill",css("--ink-2"));
+      E("text",{x:x1+7,y:y+3.5,class:"val"},svg).textContent=opt.fmtV?opt.fmtV(d.v):f0(d.v);
+      hitRect(svg,0,padT+i*rowH,w,rowH,d.tip);
+    });
+    const al=E("text",{x:x0,y:padT+plotH+27,"text-anchor":"start",class:"tick"},svg);
+    al.textContent=opt.axisNote||""; al.setAttribute("fill",css("--ink-3"));
+  });
+}
+
+/* ---- diverging bars (forecast change) ---- */
+function diverging(id,items,opt={}){
+  const rowH=22,padT=6,padB=18,labW=104,valW=52;
+  mount(id,padT+padB+Math.max(items.length,1)*rowH,(svg,w)=>{
+    if(!items.length){E("text",{x:w/2,y:30,"text-anchor":"middle",class:"lab"},svg).textContent="No data in the current selection";return;}
+    const x0=labW,x1=w-valW,max=Math.max(...items.map(d=>Math.abs(d.v)),.01);
+    items.forEach((d,i)=>{
+      const y=padT+i*rowH,bh=13,by=y+(rowH-bh)/2;
+      const bw=Math.max(Math.abs(d.v)/max*(x1-x0),1.5), col=d.v>=0?css("--s1"):css("--s8");
+      E("path",{d:`M${x0},${by} H${x0+bw-4} a4,4 0 0 1 4,4 v${bh-8} a4,4 0 0 1 -4,4 H${x0} Z`,fill:col},svg);
+      const lt=E("text",{x:x0-8,y:y+rowH/2+3.5,"text-anchor":"end",class:"tick"},svg);
+      lt.textContent=d.label; lt.setAttribute("fill",css("--ink-2"));
+      const vt=E("text",{x:x0+bw+7,y:y+rowH/2+3.5,class:"val"},svg);
+      vt.textContent=sgn(d.v,0); vt.setAttribute("fill",css("--ink"));
+      hitRect(svg,0,y,w,rowH,d.tip);
+    });
+  });
+}
+
+/* ---- status split bar ---- */
+function statusSplit(id,ok,re,extra){
+  const host=document.getElementById(id); if(!host) return;
+  const tot=ok+re||1;
+  host.innerHTML=`
+    <div style="display:flex;align-items:baseline;gap:8px;margin:2px 0 10px">
+      <span style="font-size:34px;font-weight:680;letter-spacing:-.03em;color:var(--crit-ink)">${f0(re)}</span>
+      <span style="font-size:12.5px;color:var(--ink-2)">of ${f0(tot)} part–site plans need an order raised</span>
+    </div>
+    <div style="display:flex;height:11px;border-radius:6px;overflow:hidden;gap:2px;background:var(--surface-2)">
+      <div id="ss-a" style="width:${re/tot*100}%;background:var(--crit)"></div>
+      <div id="ss-b" style="width:${ok/tot*100}%;background:var(--good)"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:11.5px;color:var(--ink-2)">
+      <span><b style="color:var(--crit-ink)">${pct(re/tot,0)}</b> Reorder</span>
+      <span><b style="color:var(--good-ink)">${pct(ok/tot,0)}</b> OK</span>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--grid);padding-top:11px;display:flex;flex-direction:column;gap:9px">
+      ${extra.map(e=>`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+        <span style="font-size:12px;color:var(--ink-2)">${e.l}</span>
+        <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:${e.c||"var(--ink)"}">${e.v}</span></div>`).join("")}
+    </div>`;
+  bindTip(host.querySelector("#ss-a"),`<div class="th">Reorder</div>${trow("Plans",f0(re))}${trow("Share",pct(re/tot,1))}<div class="tn">Inventory position at or below the reorder point.</div>`);
+  bindTip(host.querySelector("#ss-b"),`<div class="th">OK</div>${trow("Plans",f0(ok))}${trow("Share",pct(ok/tot,1))}<div class="tn">Position above the reorder point — no action this cycle.</div>`);
+}
+
+/* ==================================================================
+   KPI cards
+================================================================== */
+function kpis(id,cards){
+  const host=document.getElementById(id); if(!host) return;
+  host.textContent="";
+  cards.forEach(c=>{
+    const el=document.createElement("div");
+    el.className="kpi"+(c.tone?" k-"+c.tone:"");
+    el.innerHTML=`<div class="lbl">${c.label}<span class="info" aria-hidden="true">i</span></div>
+      <div class="val${c.sm?" sm":""}">${c.value}</div>
+      <div class="foot">${c.foot||""}</div>`;
+    bindTip(el.querySelector(".info"),`<div class="th">${c.label}</div><div>${c.tip}</div>`+
+      (c.src?`<div class="tn">${c.src}</div>`:""));
+    host.appendChild(el);
+  });
+}
+/* mode: true = up is good, false = down is good, "neutral" = neither
+   (demand moving up or down is not good or bad on its own). */
+const deltaHTML=(v,mode=true)=>{
+  if(v==null||!isFinite(v)) return "";
+  const cls = mode==="neutral" ? "flat"
+    : Math.abs(v)<0.0005 ? "flat" : ((v>0)===mode?"up":"down");
+  return `<span class="delta ${cls}">${v>0?"▲":v<0?"▼":"■"} ${sgn(v,1)}</span>`;
+};
+
+/* ==================================================================
+   tables
+================================================================== */
+function table(hostId,cols,rows,opt={}){
+  const host=document.getElementById(hostId); if(!host) return;
+  const sk=sorts[hostId];
+  let data=rows.slice();
+  if(sk){ const c=cols.find(c=>c.k===sk.k);
+    data.sort((a,b)=>{const x=c.sv?c.sv(a):a[c.k],y=c.sv?c.sv(b):b[c.k];
+      return (typeof x==="string"?x.localeCompare(y):x-y)*(sk.dir); }); }
+  else if(opt.sort) data.sort(opt.sort);
+  if(opt.limit) data=data.slice(0,opt.limit);
+  if(!data.length){ host.innerHTML=`<div class="empty">Nothing matches the current selection.</div>`; return; }
+
+  const th=cols.map(c=>`<th class="${c.l?"l":""}" data-k="${c.k}" title="${c.tip||""}">${c.h}${
+    sk&&sk.k===c.k?`<span class="ar">${sk.dir>0?"▲":"▼"}</span>`:""}</th>`).join("");
+  const tb=data.map((r,i)=>`<tr${opt.rowCls?` class="${opt.rowCls(r)}"`:""}>`+
+    cols.map(c=>{
+      const cell=c.f(r,i);
+      const heat=c.heat?c.heat(r):null;
+      return `<td class="${c.cls?c.cls(r):""}${c.l?" l":""}${heat?" heat":""}">${
+        heat?`<i style="background:${heat}"></i>`:""}${cell}</td>`;
+    }).join("")+"</tr>").join("");
+  host.innerHTML=`<table><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table>`;
+  host.querySelectorAll("th").forEach(h=>h.addEventListener("click",()=>{
+    const k=h.dataset.k, cur=sorts[hostId];
+    sorts[hostId]=(cur&&cur.k===k)?{k,dir:-cur.dir}:{k,dir:-1};
+    render();
+  }));
+  if(opt.rowTip){
+    host.querySelectorAll("tbody tr").forEach((tr,i)=>bindTip(tr,()=>opt.rowTip(data[i])));
+  }
+}
+const heatScale=(v,mid,span,invert)=>{
+  if(v==null||!isFinite(v)) return null;
+  let t=Math.max(-1,Math.min(1,(v-mid)/span)); if(invert) t=-t;
+  if(Math.abs(t)<.12) return null;
+  return t>0 ? `rgba(12,163,12,${(.05+t*.14).toFixed(3)})` : `rgba(208,59,59,${(.05+(-t)*.16).toFixed(3)})`;
+};
+
+/* ==================================================================
+   slicers
+================================================================== */
+function buildSlicers(){
+  const host=document.getElementById("filters");
+  DIMS.forEach(d=>{
+    const wrap=document.createElement("div"); wrap.className="slicer"; wrap.dataset.dim=d.k;
+    wrap.innerHTML=`<button type="button" aria-haspopup="true"><span class="k">${d.label}</span>
+        <span class="v">All</span><span class="caret">▼</span></button>
+      <div class="panel">${d.search?`<input type="search" placeholder="Search ${d.label.toLowerCase()}…" aria-label="Search ${d.label}">`:""}
+        <div class="opts"></div>
+        <div class="panel-foot"><button data-a="all">Select all</button><button data-a="none">Clear</button></div></div>`;
+    host.appendChild(wrap);
+    wrap.querySelector("button").addEventListener("click",e=>{
+      e.stopPropagation();
+      const open=wrap.dataset.open==="1";
+      document.querySelectorAll(".slicer").forEach(s=>s.dataset.open="0");
+      wrap.dataset.open=open?"0":"1"; if(!open) fillOptions(d,wrap);
+    });
+    wrap.querySelector(".panel").addEventListener("click",e=>e.stopPropagation());
+    wrap.querySelectorAll(".panel-foot button").forEach(b=>b.addEventListener("click",()=>{
+      F[d.k].clear(); if(b.dataset.a==="all"){/* all = no filter */}
+      fillOptions(d,wrap); render();
+    }));
+    const s=wrap.querySelector("input[type=search]");
+    if(s) s.addEventListener("input",()=>fillOptions(d,wrap,s.value));
+  });
+  const clr=document.createElement("button");
+  clr.className="icon-btn"; clr.textContent="Reset filters";
+  clr.addEventListener("click",()=>{DIMS.forEach(d=>F[d.k].clear());
+    drill.p1={lvl:0,family:null,part:null}; drill.p2={lvl:0,family:null,part:null}; render();});
+  host.appendChild(clr);
+  document.addEventListener("click",()=>document.querySelectorAll(".slicer").forEach(s=>s.dataset.open="0"));
+}
+function fillOptions(d,wrap,q=""){
+  const scope=ROWS.filter(r=>passes(r,d.k));
+  const counts=new Map();
+  scope.forEach(r=>counts.set(r[d.k],(counts.get(r[d.k])||0)+1));
+  let keys=[...counts.keys()].sort();
+  if(q) keys=keys.filter(k=>k.toLowerCase().includes(q.toLowerCase()));
+  const box=wrap.querySelector(".opts");
+  box.innerHTML=keys.slice(0,400).map(k=>
+    `<label><input type="checkbox" value="${k}"${F[d.k].has(k)?" checked":""}>
+      <span>${k}</span><span class="c">${counts.get(k)}</span></label>`).join("")
+    || `<div style="padding:8px;color:var(--ink-3);font-size:12px">No matches</div>`;
+  box.querySelectorAll("input").forEach(cb=>cb.addEventListener("change",()=>{
+    cb.checked?F[d.k].add(cb.value):F[d.k].delete(cb.value);
+    drill.p1={lvl:0,family:null,part:null}; drill.p2={lvl:0,family:null,part:null};
+    render();
+  }));
+}
+function paintSlicers(){
+  DIMS.forEach(d=>{
+    const wrap=document.querySelector(`.slicer[data-dim="${d.k}"]`);
+    const n=F[d.k].size, v=wrap.querySelector(".v");
+    v.textContent = n===0?"All" : n===1?[...F[d.k]][0] : n+" selected";
+    wrap.classList.toggle("on",n>0);
+  });
+}
+
+/* ==================================================================
+   drill-down component (family → part → site)
+================================================================== */
+function drillChart(page,crumbId,chartId,measure,opt){
+  const st=drill[page];
+  const cb=document.getElementById(crumbId);
+  const path=[{t:"All families",lvl:0}];
+  if(st.family) path.push({t:st.family,lvl:1});
+  if(st.part) path.push({t:st.part,lvl:2});
+  cb.innerHTML=path.map((p,i)=> i===path.length-1
+      ? `<span class="now">${p.t}</span>`
+      : `<button data-lvl="${p.lvl}">${p.t}</button><span class="sep">/</span>`).join("")
+    + (st.lvl<2?`<span class="sep" style="margin-left:4px">·</span>
+       <span class="hint-inline">click a bar to open ${st.lvl===0?"parts":"sites"}</span>`:"");
+  cb.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    const l=+b.dataset.lvl;
+    if(l===0){st.lvl=0;st.family=null;st.part=null;} else {st.lvl=1;st.part=null;}
+    render();
+  }));
+
+  let rs=VIEW, key="family";
+  if(st.lvl>=1){ rs=rs.filter(r=>r.family===st.family); key="part"; }
+  if(st.lvl>=2){ rs=rs.filter(r=>r.part===st.part); key="site"; }
+  const groups=groupBy(rs,key).map(g=>({label:g.key, v:measure(g.s), s:g.s, rows:g.rows}))
+    .sort((a,b)=>b.v-a.v).slice(0,st.lvl===1?14:12);
+  barsH(chartId,groups.map(g=>({
+    label:g.label, v:g.v,
+    tip:`<div class="th">${g.label}</div>`+opt.tip(g.s,g.rows)+
+        (st.lvl<2?`<div class="tn">Click to drill into ${st.lvl===0?"parts":"sites"}.</div>`:""),
+    onClick: st.lvl<2 ? ()=>{ if(st.lvl===0){st.family=g.label;st.lvl=1;} else {st.part=g.label;st.lvl=2;} render(); } : null
+  })),{labW:opt.labW||88, fmtV:opt.fmtV, rowH:20});
+}
+
+/* ==================================================================
+   render
+================================================================== */
+function render(){
+  recompute();
+  paintSlicers();
+  const S = summarise(VIEW);
+  const supAll = groupBy(ROWS,"sup");
+  const otdBySup = new Map(supAll.map(g=>[g.key, g.s.otd ?? .5]));
+  document.getElementById("scope").textContent =
+    `${f0(VIEW.length)} of ${f0(ROWS.length)} part–site plans`;
+
+  renderP1(S,otdBySup);
+  renderP2(S);
+  renderP3(S);
+  renderP4(S);
+}
+
+/* ---------------- page 1 ---------------- */
+function renderP1(S,otdBySup){
+  kpis("k1a",[
+    {label:"2025 forecast demand", value:f0(S.ftot), tone:"mute",
+     foot:`${deltaHTML(S.chg,"neutral")} <span>vs 2024 actual</span>`,
+     tip:"Sum of the 2025 monthly forecast across every part–site plan in scope.",
+     src:"All_Part_Site_Forecast · 2025 Forecast Total"},
+    {label:"2024 actual demand", value:f0(S.atot), tone:"mute",
+     foot:"Twelve months to Dec-2024",
+     tip:"Sum of actual consumption for calendar 2024.",
+     src:"All_Part_Site_Forecast · 2024 Actual Total"},
+    {label:"Forecast demand change", value:sgn(S.chg,1), tone:S.chg<0?"warn":"good",
+     foot:`${f0(S.ftot-S.atot)} units against 2024`,
+     tip:"2025 forecast total divided by 2024 actual total, less one. The 3-month moving-average method anchors on Q4-2024, which ran below the year's average.",
+     src:"Derived from the two totals above"},
+  ]);
+  kpis("k1b",[
+    {label:"Usable inventory", value:f0(S.usable), tone:"mute",
+     foot:`On hand ${f0(S.onhand)} · blocked ${f0(S.blocked)}`,
+     tip:"On-hand stock less quantity blocked by quality hold — what can actually be issued today.",
+     src:"Inventory_Planning · Usable Inventory"},
+    {label:"Due in from open orders", value:f0(S.duein), tone:"mute",
+     foot:`Inventory position ${f0(S.pos)} units`,
+     tip:"Quantity on purchase orders raised but not yet received as at 23 Dec 2024. Inventory position adds this to usable stock and nets off backorders.",
+     src:"Inventory_Planning · Due In Qty"},
+    {label:"Plans below reorder point", value:f0(S.reorder), tone:S.reorder?"crit":"good",
+     foot:`${pct(S.n?S.reorder/S.n:0,0)} of plans in scope`,
+     tip:"Part–site combinations whose inventory position has reached or fallen below the reorder point.",
+     src:"Inventory_Planning · Replenishment Status"},
+    {label:"Recommended order quantity", value:f0(S.rec), tone:S.rec?"warn":"good",
+     foot:"Units to raise this cycle",
+     tip:"Target stock level less inventory position, for plans flagged Reorder.",
+     src:"Inventory_Planning · Recommended Order Qty"},
+    {label:"Months of cover", value:f1(S.cover), tone:S.cover<2?"crit":S.cover<3?"warn":"good",
+     foot:"Usable stock ÷ average monthly forecast",
+     tip:"Portfolio cover: total usable inventory divided by total average monthly forecast. This weights by volume rather than averaging the per-plan ratios.",
+     src:"Inventory_Planning · Months of Cover"},
+  ]);
+  kpis("k1c",[
+    {label:"On-time delivery", value:pct(S.otd,1), tone:S.otd<.6?"crit":S.otd<.85?"warn":"good",
+     foot:`${f0(S.poOn)} of ${f0(S.poN)} orders on time`,
+     tip:"Purchase order lines received on or before the promised date, 2022–2024.",
+     src:"Purchase_Orders · On_Time_Flag"},
+    {label:"Supplier fill rate", value:pct(S.fill,1), tone:S.fill<.95?"warn":"good",
+     foot:`${f0(S.received)} of ${f0(S.ordered)} units`,
+     tip:"Units received divided by units ordered across all purchase orders.",
+     src:"Purchase_Orders · received_qty ÷ ordered_qty"},
+    {label:"Quantity shortfall", value:f0(S.shortfall), tone:S.shortfall?"warn":"good",
+     foot:"Units ordered but never received",
+     tip:"Ordered quantity less received quantity, summed over all purchase orders.",
+     src:"Purchase_Orders · Quantity Shortfall"},
+  ]);
+
+  timeSeries("c-trend",ALLM,S.hist,S.fcst,{h:236,note:"Forecast is a 3-month moving average."});
+  statusSplit("c-status",S.n-S.reorder,S.reorder,[
+    {l:"High-criticality (A) on the list", v:f0(VIEW.filter(r=>r.status==="Reorder"&&r.crit==="A").length), c:"var(--crit-ink)"},
+    {l:"Units to order", v:f0(S.rec)},
+    {l:"Plans with under 1 month cover", v:f0(VIEW.filter(r=>r.avgfc>0&&r.cover<1).length), c:"var(--warn-ink)"},
+    {l:"Open backorders", v:f0(S.back)},
+  ]);
+
+  drillChart("p1","crumb-1","c-drill1",s=>s.rec,{
+    labW:84, fmtV:f0,
+    tip:(s,rows)=>trow("Recommended order",f0(s.rec)+" units")+
+      trow("Plans to reorder",f0(s.reorder)+" of "+f0(s.n))+
+      trow("Usable inventory",f0(s.usable))+trow("Due in",f0(s.duein))+
+      trow("Months of cover",f1(s.cover))});
+
+  const top10=VIEW.filter(r=>r.rec>0).sort((a,b)=>b.rec-a.rec).slice(0,10);
+  barsH("c-top10",top10.map(r=>({
+    label:r.key, v:r.rec,
+    color: r.crit==="A"?css("--crit"):r.crit==="B"?css("--warn"):css("--s1"),
+    tip:`<div class="th">${r.key}</div>`+
+      trow("Recommended order",f0(r.rec)+" units")+trow("Criticality",r.crit)+
+      trow("Inventory position",f0(r.pos))+trow("Reorder point",f0(r.rop))+
+      trow("Target stock",f0(r.tgt))+trow("Months of cover",f2(r.cover))+
+      trow("Lead time",f0(r.lt)+" days")+
+      `<div class="tn">Colour marks criticality: A red, B amber, C blue.</div>`
+  })),{labW:118,rowH:21});
+
+  scatter("c-scatter",VIEW.map(r=>({
+    x:r.pos, y:r.rop, color: r.status==="Reorder"?css("--crit"):css("--good"),
+    tip:`<div class="th">${r.key}</div>`+
+      trow("Inventory position",f0(r.pos))+trow("Reorder point",f0(r.rop))+
+      trow("Safety stock",f0(r.ss))+trow("Months of cover",f2(r.cover))+
+      trow("Status",r.status)+trow("Criticality",r.crit)
+  })),{h:262});
+
+  const sup=groupBy(VIEW,"sup").filter(g=>g.s.poN>0).sort((a,b)=>a.s.otd-b.s.otd).slice(0,10);
+  barsH("c-supbot",sup.map(g=>({
+    label:g.key, v:g.s.otd,
+    color: g.s.otd<.4?css("--crit"):g.s.otd<.6?css("--warn"):css("--s1"),
+    tip:`<div class="th">${g.key}</div>`+trow("On-time delivery",pct(g.s.otd,1))+
+      trow("Orders",f0(g.s.poN))+trow("Avg late days",f1(g.s.avgLate))+
+      trow("Fill rate",pct(g.s.fill,1))+trow("Shortfall",f0(g.s.shortfall)+" units")+
+      trow("Parts supplied",f0(new Set(g.rows.map(r=>r.part)).size))
+  })),{labW:66,rowH:21,fmt:t=>pct(t,0),fmtV:v=>pct(v,0)});
+
+  const risky=VIEW.map(r=>({r,score:risk(r,otdBySup)})).sort((a,b)=>b.score-a.score).slice(0,12);
+  document.getElementById("risk-note").textContent=`top 12 of ${f0(VIEW.length)} plans`;
+  table("t-risk",[
+    {k:"key",h:"Part – Site",l:1,f:x=>x.r.key,cls:()=>"key",sv:x=>x.r.key},
+    {k:"crit",h:"Crit",l:1,f:x=>`<span class="chip ${x.r.crit}">${x.r.crit}</span>`,sv:x=>x.r.crit},
+    {k:"family",h:"Family",l:1,f:x=>x.r.family,sv:x=>x.r.family},
+    {k:"status",h:"Status",l:1,f:x=>`<span class="pill ${band(x.r)==="crit"?"crit":band(x.r)==="warn"?"warn":"good"}">${
+        band(x.r)==="crit"?"Reorder":band(x.r)==="warn"?"Watch":"OK"}</span>`,sv:x=>x.r.status},
+    {k:"cover",h:"Cover (mo)",f:x=>f2(x.r.cover),cls:x=>x.r.cover<1?"strong":"",
+      heat:x=>heatScale(Math.min(x.r.cover,6),3,3),sv:x=>x.r.cover},
+    {k:"lt",h:"Lead time",f:x=>f0(x.r.lt)+"d",sv:x=>x.r.lt},
+    {k:"pos",h:"Position",f:x=>f0(x.r.pos),sv:x=>x.r.pos},
+    {k:"rop",h:"Reorder pt",f:x=>f0(x.r.rop),sv:x=>x.r.rop},
+    {k:"rec",h:"Order qty",f:x=>`<span class="strong">${f0(x.r.rec)}</span>`,sv:x=>x.r.rec},
+    {k:"otd",h:"Supplier OTD",f:x=>pct(otdBySup.get(x.r.sup),0),
+      heat:x=>heatScale(otdBySup.get(x.r.sup),.5,.3),sv:x=>otdBySup.get(x.r.sup)},
+    {k:"sup",h:"Supplier",l:1,f:x=>x.r.sup,cls:()=>"key",sv:x=>x.r.sup},
+    {k:"score",h:"Risk",f:x=>`<span class="strong">${f0(x.score)}</span>`,
+      heat:x=>heatScale(x.score,55,25,true),sv:x=>x.score},
+  ],risky,{rowCls:x=>"sev-"+x.r.crit.toLowerCase(),
+    rowTip:x=>`<div class="th">${x.r.key}</div>`+
+      trow("Risk score",f0(x.score))+trow("Criticality",x.r.crit)+
+      trow("Months of cover",f2(x.r.cover))+trow("Lead time",f0(x.r.lt)+" days")+
+      trow("Cover vs lead time",f2(x.r.cover)+" mo vs "+f2(LTM(x.r))+" mo")+
+      trow("Recommended order",f0(x.r.rec)+" units")+
+      trow("Supplier on-time",pct(otdBySup.get(x.r.sup),1))+
+      `<div class="tn">Cover shorter than the lead time means stock runs out before a replacement order can land.</div>`});
+}
+
+/* ---------------- page 2 ---------------- */
+function renderP2(S){
+  kpis("k2",[
+    {label:"2024 actual demand", value:f0(S.atot), tone:"mute", foot:"Baseline year",
+     tip:"Actual consumption, Jan-2024 to Dec-2024.", src:"All_Part_Site_Forecast · 2024 Actual Total"},
+    {label:"2025 forecast demand", value:f0(S.ftot), tone:"mute",
+     foot:`${deltaHTML(S.chg,"neutral")} vs 2024`,
+     tip:"Sum of the twelve 2025 monthly forecast columns.", src:"All_Part_Site_Forecast · 2025 Forecast Total"},
+    {label:"Forecast change", value:sgn(S.chg,1), tone:S.chg<0?"warn":"good",
+     foot:`${f0(Math.abs(S.ftot-S.atot))} units ${S.chg<0?"lower":"higher"}`,
+     tip:"2025 forecast against 2024 actual for the current selection.", src:"Derived from the two totals"},
+    {label:"Monthly demand variability", value:f0(S.std), sm:true, tone:"mute",
+     foot:"Std deviation of monthly demand",
+     tip:"Standard deviation of the 36 monthly consumption totals for the current selection. The workbook's own per-plan Monthly Demand Std Dev — the figure that drives safety stock — is shown on each row of the planning worksheet and in the inspector below.",
+     src:"Derived — standard deviation of the aggregated monthly series"},
+    {label:"Forecast accuracy (MAE)", value:f2(S.mae), sm:true, tone:"mute",
+     foot:"Units per part–site per month",
+     tip:"Mean absolute error of a 3-month moving-average backtest, averaged across the plans in scope. The workbook publishes this for one plan (P00001-SITE01, MAE 1.85); the same method is applied to every plan here.",
+     src:"Derived — Demand_Forcast method extended to all plans"},
+  ]);
+  const dir = S.chg<0 ? "below" : "above";
+  document.getElementById("n2").innerHTML =
+    `<b>Read the forecast with care.</b> The 2025 plan is built from a three-month moving average anchored on
+     Oct–Dec 2024. Consumption fell through 2024 — from ${f0(S.hist[24])} units in January to ${f0(S.hist[35])} in December —
+     so the method carries that low point forward and lands ${sgn(S.chg,1)} ${dir} the 2024 actual, essentially flat at
+     ${f0(S.fcst[0])}–${f0(S.fcst.reduce((a,b)=>Math.max(a,b),0))} units a month. A moving average cannot project a
+     trend or a season; if the 2024 decline was a genuine fleet effect the plan is sound, and if it was a one-off it
+     under-buys. That question belongs with the planning team before these order quantities are committed.`;
+
+  timeSeries("c-hist",ALLM,S.hist,S.fcst,{h:290,note:"Forecast is a 3-month moving average."});
+
+  const MINV=24;
+  const movers=VIEW.filter(r=>r.atot>=MINV&&r.chg!=null);
+  const up=movers.slice().sort((a,b)=>b.chg-a.chg).slice(0,10);
+  const down=movers.slice().sort((a,b)=>a.chg-b.chg).slice(0,10);
+  const mtip=r=>`<div class="th">${r.key}</div>`+
+    trow("2024 actual",f0(r.atot)+" units")+trow("2025 forecast",f0(r.ftot)+" units")+
+    trow("Change",sgn(r.chg,1))+trow("Family",r.family)+trow("Criticality",r.crit)+
+    trow("Months of cover",f2(r.cover))+trow("Status",r.status);
+  diverging("c-up",up.map(r=>({label:r.key,v:r.chg,tip:mtip(r)})));
+  diverging("c-down",down.map(r=>({label:r.key,v:r.chg,tip:mtip(r)})));
+
+  const famG=groupBy(VIEW,"family").map(g=>({label:g.key,atot:g.s.atot,ftot:g.s.ftot,s:g.s}))
+    .sort((a,b)=>b.ftot-a.ftot);
+  const gtip=d=>`<div class="th">${d.label}</div>`+
+    trow("2024 actual",f0(d.atot),css("--s1"))+trow("2025 forecast",f0(d.ftot),css("--s2"))+
+    trow("Change",sgn(d.s.chg,1))+trow("Plans",f0(d.s.n))+trow("Usable inventory",f0(d.s.usable))+
+    trow("To reorder",f0(d.s.reorder)+" plans");
+  groupedH("c-fam",famG.map(d=>({...d,tip:gtip(d)})),
+    [{k:"atot",c:"--s1"},{k:"ftot",c:"--s2"}],{labW:88,labelAll:true});
+  const siteG=groupBy(VIEW,"site").map(g=>({label:g.key,atot:g.s.atot,ftot:g.s.ftot,s:g.s}))
+    .sort((a,b)=>b.ftot-a.ftot);
+  groupedH("c-site",siteG.map(d=>({...d,tip:gtip(d)})),
+    [{k:"atot",c:"--s1"},{k:"ftot",c:"--s2"}],{labW:70,labelAll:true});
+
+  // single part-site inspector
+  const sel=document.getElementById("sel-ps");
+  const keys=VIEW.map(r=>r.key);
+  if(sel.dataset.n!==String(keys.length)||!keys.includes(sel.value)){
+    sel.innerHTML=keys.map(k=>`<option>${k}</option>`).join("");
+    sel.dataset.n=String(keys.length);
+    if(!sel._b){sel.addEventListener("change",()=>drawOne(sel.value));sel._b=1;}
+  }
+  drawOne(sel.value||keys[0]);
+}
+function drawOne(key){
+  const r=ROWS.find(x=>x.key===key); if(!r) return;
+  timeSeries("c-one",ALLM,r.hist,r.fcst,{h:224,note:key+" · forecast is a 3-month moving average"});
+  kpis("one-facts",[
+    {label:"2024 actual",value:f0(r.atot),tone:"mute",foot:"units",
+     tip:"Actual consumption for this plan in 2024.",src:"All_Part_Site_Forecast"},
+    {label:"2025 forecast",value:f0(r.ftot),tone:"mute",foot:`${deltaHTML(r.chg,"neutral")}`,
+     tip:"Forecast consumption for this plan in 2025.",src:"All_Part_Site_Forecast"},
+    {label:"Monthly std deviation",value:f2(r.std),sm:true,tone:"mute",foot:"units per month",
+     tip:"Variability of monthly demand — the input to this plan's safety stock.",src:"Inventory_Planning"},
+    {label:"Backtest MAE",value:f2(r.mae),sm:true,tone:"mute",foot:"units per month",
+     tip:"Mean absolute error of the 3-month moving average over the 33 months it can be tested on.",
+     src:"Derived — Demand_Forcast method"},
+    {label:"Months of cover",value:f2(r.cover),tone:r.cover<1?"crit":r.cover<2?"warn":"good",
+     foot:`Lead time ${f0(r.lt)} days`,
+     tip:"Usable inventory divided by average monthly forecast.",src:"Inventory_Planning"},
+    {label:"Replenishment status",value:r.status,sm:true,tone:r.status==="Reorder"?"crit":"good",
+     foot:r.rec>0?`Order ${f0(r.rec)} units`:"No action this cycle",
+     tip:"Whether inventory position has reached the reorder point.",src:"Inventory_Planning"},
+  ]);
+}
+
+/* ---------------- page 3 ---------------- */
+function renderP3(S){
+  const lowCover=VIEW.filter(r=>r.avgfc>0&&r.cover<LTM(r));
+  kpis("k3",[
+    {label:"Total inventory position", value:f0(S.pos), tone:"mute",
+     foot:`Usable ${f0(S.usable)} + due in ${f0(S.duein)} − backorders ${f0(S.back)}`,
+     tip:"Usable inventory plus quantity due in on open purchase orders, less outstanding backorders.",
+     src:"Inventory_Planning · Inventory Position"},
+    {label:"Open backorders", value:f0(S.back), tone:S.back?"warn":"good",
+     foot:`Blocked stock ${f0(S.blocked)} units`,
+     tip:"Demand already raised that could not be satisfied from stock. Blocked stock is physically present but on quality hold.",
+     src:"Inventory_Planning · Sum of backorder_qty"},
+    {label:"Due in from suppliers", value:f0(S.duein), tone:"mute",
+     foot:`${f0(S.rec)} units still short once these land`,
+     tip:"Quantity on open purchase orders. Due-ins are already counted inside inventory position, so the recommended order quantity is what remains short even after every open order arrives — incoming supply alone does not close the gap.",
+     src:"Inventory_Planning · Due In Qty"},
+    {label:"Plans to reorder", value:f0(S.reorder), tone:S.reorder?"crit":"good",
+     foot:`A ${f0(VIEW.filter(r=>r.status==="Reorder"&&r.crit==="A").length)} · B ${
+       f0(VIEW.filter(r=>r.status==="Reorder"&&r.crit==="B").length)} · C ${
+       f0(VIEW.filter(r=>r.status==="Reorder"&&r.crit==="C").length)}`,
+     tip:"Part–site plans at or below their reorder point, split by criticality class.",
+     src:"Inventory_Planning · Replenishment Status"},
+    {label:"Recommended order quantity", value:f0(S.rec), tone:S.rec?"warn":"good",
+     foot:"Target stock less position",
+     tip:"Units required to lift every reorder plan back to its target stock level.",
+     src:"Inventory_Planning · Recommended Order Qty"},
+    {label:"Cover shorter than lead time", value:f0(lowCover.length), tone:lowCover.length?"crit":"good",
+     foot:"Stock runs out before resupply lands",
+     tip:"Plans whose months of cover is below their lead time expressed in months — these stock out even if an order is raised today.",
+     src:"Derived from Months of Cover and Lead Time Days"},
+  ]);
+
+  histogram("c-cover",VIEW.filter(r=>r.avgfc>0).map(r=>Math.min(r.cover,11.99)),{h:300});
+
+  const ipt=VIEW.filter(r=>r.rec>0).sort((a,b)=>b.rec-a.rec).slice(0,12);
+  groupedH("c-ipt",ipt.map(r=>({
+    label:r.key, pos:r.pos, rop:r.rop, tgt:r.tgt,
+    tip:`<div class="th">${r.key}</div>`+
+      trow("Inventory position",f0(r.pos),css("--s1"))+
+      trow("Reorder point",f0(r.rop),css("--s2"))+
+      trow("Target stock level",f0(r.tgt),css("--s3"))+
+      trow("Recommended order",f0(r.rec)+" units")+
+      trow("Safety stock",f0(r.ss))+trow("Lead-time demand",f1(r.ltd))+
+      trow("Criticality",r.crit)+trow("Months of cover",f2(r.cover))
+  })),[{k:"pos",c:"--s1"},{k:"rop",c:"--s2"},{k:"tgt",c:"--s3"}],{labW:118,bh:7,labelAll:true});
+
+  let rows=VIEW;
+  if(planFilter==="reorder") rows=rows.filter(r=>r.status==="Reorder");
+  else if(planFilter==="lowcover") rows=rows.filter(r=>r.avgfc>0&&r.cover<LTM(r));
+  const ord={A:0,B:1,C:2};
+  rows=rows.slice().sort((a,b)=> ord[a.crit]-ord[b.crit] || b.rec-a.rec || a.cover-b.cover);
+  const CAP=800;
+  document.getElementById("plan-count").textContent =
+    `${f0(rows.length)} plans · ${f0(sum(rows,"rec"))} units to order` +
+    (rows.length>CAP?` · showing the first ${CAP}, sort or filter to see the rest`:"");
+
+  table("t-plan",[
+    {k:"part",h:"Part",l:1,f:r=>r.part,cls:()=>"key",sv:r=>r.part},
+    {k:"site",h:"Site",l:1,f:r=>r.site,cls:()=>"key",sv:r=>r.site},
+    {k:"crit",h:"Crit",l:1,f:r=>`<span class="chip ${r.crit}">${r.crit}</span>`,sv:r=>ord[r.crit]},
+    {k:"usable",h:"Usable",f:r=>f0(r.usable),sv:r=>r.usable},
+    {k:"duein",h:"Due in",f:r=>f0(r.duein),sv:r=>r.duein},
+    {k:"backorder",h:"Backorder",f:r=>r.backorder?`<span class="strong" style="color:var(--crit-ink)">${f0(r.backorder)}</span>`:"0",sv:r=>r.backorder},
+    {k:"pos",h:"Position",f:r=>`<span class="strong">${f0(r.pos)}</span>`,sv:r=>r.pos},
+    {k:"cover",h:"Cover (mo)",f:r=>r.avgfc>0?f2(r.cover):"–",
+      heat:r=>r.avgfc>0?heatScale(Math.min(r.cover,6),2.5,2.5):null,sv:r=>r.cover},
+    {k:"ss",h:"Safety stock",f:r=>f0(r.ss),sv:r=>r.ss},
+    {k:"rop",h:"Reorder pt",f:r=>f0(r.rop),sv:r=>r.rop},
+    {k:"tgt",h:"Target",f:r=>f0(r.tgt),sv:r=>r.tgt},
+    {k:"rec",h:"Order qty",f:r=>r.rec?`<span class="strong">${f0(r.rec)}</span>`:"–",
+      heat:r=>r.rec?heatScale(r.rec,0,40,true):null,sv:r=>r.rec},
+    {k:"status",h:"Status",l:1,f:r=>{const b=band(r);
+      return `<span class="pill ${b}">${b==="crit"?"Reorder":b==="warn"?"Watch":"OK"}</span>`;},sv:r=>r.status},
+  ],rows,{limit:CAP,rowCls:r=>"sev-"+r.crit.toLowerCase(),
+    rowTip:r=>`<div class="th">${r.key} · ${r.family}</div>`+
+      trow("On hand",f0(r.onhand))+trow("Blocked",f0(r.blocked))+trow("Backorder",f0(r.backorder))+
+      trow("Usable inventory",f0(r.usable))+trow("Due in",f0(r.duein))+
+      trow("Inventory position",f0(r.pos))+
+      trow("Avg monthly forecast",f2(r.avgfc))+trow("Months of cover",f2(r.cover))+
+      trow("Lead time",f0(r.lt)+" days")+trow("Lead-time demand",f2(r.ltd))+
+      trow("Target service level",pct(r.tsl,0))+trow("Demand std deviation",f2(r.std))+
+      trow("Safety stock",f0(r.ss))+trow("Reorder point",f0(r.rop))+
+      trow("Reorder gap",f0(r.gap))+trow("Target stock level",f0(r.tgt))+
+      trow("Recommended order",f0(r.rec))+trow("Supplier",r.sup)+
+      `<div class="tn">Criticality ${r.crit} · service level ${pct(r.tsl,0)}</div>`});
+}
+
+/* ---------------- page 4 ---------------- */
+function renderP4(S){
+  kpis("k4",[
+    {label:"On-time delivery", value:pct(S.otd,1), tone:S.otd<.6?"crit":S.otd<.85?"warn":"good",
+     foot:`${f0(S.poN-S.poOn)} of ${f0(S.poN)} orders late`,
+     tip:"Share of purchase order lines received on or before the promised date.",
+     src:"Purchase_Orders · On_Time_Flag"},
+    {label:"Fill rate", value:pct(S.fill,1), tone:S.fill<.95?"warn":"good",
+     foot:`${f0(S.received)} of ${f0(S.ordered)} units received`,
+     tip:"Units received divided by units ordered.", src:"Purchase_Orders · PO_Fill_Rate"},
+    {label:"Average late days", value:f1(S.avgLate), tone:S.avgLate>3?"warn":"good",
+     foot:"On late orders only",
+     tip:"Mean days past the promised date, counting only orders that arrived late.",
+     src:"Purchase_Orders · Late Days Only"},
+    {label:"Average actual lead time", value:f1(S.avgALT), tone:"mute",
+     foot:`Planned ${f1(S.avgPlan)} days · ${S.avgVar>0?"+":""}${f1(S.avgVar)} variance`,
+     tip:"Days from order date to receipt date, averaged over all purchase orders.",
+     src:"Purchase_Orders · Actual_Lead_Time_Days"},
+    {label:"Quantity shortfall", value:f0(S.shortfall), tone:S.shortfall?"warn":"good",
+     foot:`${pct(S.ordered?S.shortfall/S.ordered:0,2)} of units ordered`,
+     tip:"Ordered quantity never received, summed across all purchase orders.",
+     src:"Purchase_Orders · Quantity Shortfall"},
+  ]);
+  document.getElementById("n4").innerHTML =
+    `<b>Lateness is the system-wide problem, not shortfall.</b> Only ${pct(S.otd,1)} of purchase orders arrive by the
+     promised date, and actual lead times run ${f1(S.avgVar)} days over the planning figure of ${f1(S.avgPlan)} days on
+     average — so safety stock built on planned lead times is systematically short. Quantity fulfilment is sound by
+     contrast at ${pct(S.fill,1)}. The action is to re-baseline planning lead times against actuals, supplier by supplier,
+     before adding stock.`;
+
+  const G=groupBy(VIEW,"sup").filter(g=>g.s.poN>0);
+  const stip=g=>`<div class="th">${g.key}</div>`+
+    trow("On-time delivery",pct(g.s.otd,1))+trow("Orders",f0(g.s.poN))+
+    trow("Avg late days",f1(g.s.avgLate))+trow("Planned lead time",f1(g.s.avgPlan)+" days")+
+    trow("Actual lead time",f1(g.s.avgALT)+" days")+trow("Lead-time variance",(g.s.avgVar>0?"+":"")+f1(g.s.avgVar)+" days")+
+    trow("Fill rate",pct(g.s.fill,1))+trow("Ordered",f0(g.s.ordered)+" units")+
+    trow("Received",f0(g.s.received)+" units")+trow("Shortfall",f0(g.s.shortfall)+" units")+
+    trow("Parts supplied",f0(new Set(g.rows.map(r=>r.part)).size));
+  const bopt={labW:66,rowH:24};
+
+  barsH("c-otd",G.slice().sort((a,b)=>a.s.otd-b.s.otd).slice(0,12).map(g=>({
+    label:g.key,v:g.s.otd,color:g.s.otd<.4?css("--crit"):g.s.otd<.6?css("--warn"):css("--s1"),tip:stip(g)
+  })),{...bopt,fmt:t=>pct(t,0),fmtV:v=>pct(v,0)});
+
+  dotPlot("c-fill",G.slice().sort((a,b)=>a.s.fill-b.s.fill).slice(0,12).map(g=>({
+    label:g.key,v:g.s.fill,color:g.s.fill<.95?css("--crit"):g.s.fill<.965?css("--warn"):css("--s1"),tip:stip(g)
+  })),{min:.93,max:1,ticks:[.93,.95,.98,1],fmt:t=>pct(t,0),fmtV:v=>pct(v,1),
+       rowH:24,ref:S.fill,refLabel:`portfolio ${pct(S.fill,1)}`,axisNote:"axis starts at 93%"});
+
+  barsH("c-late",G.slice().sort((a,b)=>b.s.avgLate-a.s.avgLate).slice(0,12).map(g=>({
+    label:g.key,v:g.s.avgLate,color:g.s.avgLate>4?css("--crit"):g.s.avgLate>3?css("--warn"):css("--s1"),tip:stip(g)
+  })),{...bopt,fmt:f1,fmtV:v=>f1(v)+"d"});
+
+  groupedH("c-lt",G.slice().sort((a,b)=>b.s.avgVar-a.s.avgVar).slice(0,12).map(g=>({
+    label:g.key,plan:g.s.avgPlan,act:g.s.avgALT,tip:stip(g)
+  })),[{k:"plan",c:"--s1"},{k:"act",c:"--s2"}],{labW:66,bh:7,pad:9,fmt:f0,fmtV:v=>f1(v)+"d"});
+
+  barsH("c-var",G.slice().sort((a,b)=>b.s.avgVar-a.s.avgVar).slice(0,12).map(g=>({
+    label:g.key,v:g.s.avgVar,color:g.s.avgVar>3?css("--crit"):g.s.avgVar>1.5?css("--warn"):css("--s1"),tip:stip(g)
+  })),{...bopt,fmt:f1,fmtV:v=>(v>0?"+":"")+f1(v)+"d"});
+
+  barsH("c-short",G.slice().sort((a,b)=>b.s.shortfall-a.s.shortfall).slice(0,12).map(g=>({
+    label:g.key,v:g.s.shortfall,color:css("--s1"),tip:stip(g)
+  })),{...bopt});
+
+  const avg=summarise(VIEW);
+  table("t-sup",[
+    {k:"key",h:"Supplier",l:1,f:g=>g.key,cls:()=>"key",sv:g=>g.key},
+    {k:"poN",h:"Orders",f:g=>f0(g.s.poN),sv:g=>g.s.poN},
+    {k:"otd",h:"On-time delivery",f:g=>`<span class="strong">${pct(g.s.otd,1)}</span>`,
+      heat:g=>heatScale(g.s.otd,avg.otd,.22),sv:g=>g.s.otd},
+    {k:"late",h:"Avg late days",f:g=>f1(g.s.avgLate),
+      heat:g=>heatScale(g.s.avgLate,avg.avgLate,1.2,true),sv:g=>g.s.avgLate},
+    {k:"plan",h:"Planned LT",f:g=>f1(g.s.avgPlan)+"d",sv:g=>g.s.avgPlan},
+    {k:"alt",h:"Actual LT",f:g=>f1(g.s.avgALT)+"d",sv:g=>g.s.avgALT},
+    {k:"var",h:"LT variance",f:g=>`<span class="${g.s.avgVar>2?"strong":""}">${(g.s.avgVar>0?"+":"")+f1(g.s.avgVar)}d</span>`,
+      heat:g=>heatScale(g.s.avgVar,avg.avgVar,2,true),sv:g=>g.s.avgVar},
+    {k:"ordered",h:"Ordered",f:g=>f0(g.s.ordered),sv:g=>g.s.ordered},
+    {k:"received",h:"Received",f:g=>f0(g.s.received),sv:g=>g.s.received},
+    {k:"fill",h:"Fill rate",f:g=>`<span class="strong">${pct(g.s.fill,1)}</span>`,
+      heat:g=>heatScale(g.s.fill,avg.fill,.03),sv:g=>g.s.fill},
+    {k:"short",h:"Shortfall",f:g=>f0(g.s.shortfall),
+      heat:g=>heatScale(g.s.shortfall,avg.shortfall/Math.max(G.length,1),200,true),sv:g=>g.s.shortfall},
+    {k:"flag",h:"Flag",l:1,f:g=>{
+      const bad=(g.s.otd<.4?1:0)+(g.s.avgVar>2.5?1:0)+(g.s.fill<.96?1:0);
+      return bad>=2?`<span class="pill crit">Review</span>`
+           : bad===1?`<span class="pill warn">Watch</span>`
+           : `<span class="pill good">Sound</span>`;},
+      sv:g=>-((g.s.otd<.4?1:0)+(g.s.avgVar>2.5?1:0)+(g.s.fill<.96?1:0))},
+  ],G,{sort:(a,b)=>a.s.otd-b.s.otd,
+    rowTip:g=>stip(g)+`<div class="tn">Flagged for review when two or more of: on-time under 40%, lead-time variance over 2.5 days, fill rate under 96%.</div>`});
+}
+
+/* ==================================================================
+   chrome
+================================================================== */
+const TITLES={
+  p1:["Executive Overview","Where supply risk sits today, and what it will cost to close it"],
+  p2:["Demand Forecast","Three years of consumption and the 2025 material plan"],
+  p3:["Inventory &amp; Replenishment","The working list — what to order, how much, and in what order"],
+  p4:["Supplier Performance","Delivery reliability and quantity fulfilment, supplier by supplier"],
+};
+function goTo(page,scroll){
+  if(!TITLES[page]) return;
+  PAGE=page;
+  document.querySelectorAll(".nav button").forEach(x=>x.setAttribute("aria-current",String(x.dataset.page===page)));
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("on",p.id===page));
+  document.getElementById("ptitle").innerHTML=TITLES[page][0];
+  document.getElementById("psub").textContent=TITLES[page][1];
+  if(scroll) scrollTo({top:0,behavior:"instant"});
+  render();
+}
+document.getElementById("nav").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-page]"); if(!b) return;
+  location.hash="page-"+b.dataset.page;
+  goTo(b.dataset.page,true);
+});
+const fromHash=()=>location.hash.replace(/^#page-/,"")||"p1";
+addEventListener("hashchange",()=>goTo(fromHash(),true));
+document.getElementById("seg-plan").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  planFilter=b.dataset.f;
+  e.currentTarget.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  render();
+});
+document.getElementById("theme").addEventListener("click",()=>{
+  const cur=document.documentElement.getAttribute("data-theme");
+  const dark=cur ? cur==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme",dark?"light":"dark");
+  render();
+});
+
+buildSlicers();
+goTo(TITLES[fromHash()] ? fromHash() : "p1", false);
+</script>
