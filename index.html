@@ -681,15 +681,25 @@ document.addEventListener("scroll", hideTip, true);
 ================================================================== */
 const NS="http://www.w3.org/2000/svg";
 function E(t,a={},p){const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+/* The resize observer is attached once per container but must always repaint the
+   CURRENT chart. Keeping the draw function on the element rather than in the
+   observer's closure is what makes that true: a redraw usually changes the
+   container's height, which fires the observer, and a captured closure would
+   repaint whatever was drawn the very first time — silently reverting the chart. */
 function mount(id,h,draw){
   const host=document.getElementById(id); if(!host) return;
-  const render=()=>{
-    const w=host.clientWidth||760; host.textContent="";
-    const svg=E("svg",{width:"100%",height:h,viewBox:`0 0 ${w} ${h}`,role:"img"},host);
-    try{ draw(svg,w,h); }catch(err){ console.error(id,err); }
+  host._draw=draw; host._h=h;
+  host._paint=()=>{
+    const w=host.clientWidth||760, ht=host._h;
+    host.textContent="";
+    const svg=E("svg",{width:"100%",height:ht,viewBox:`0 0 ${w} ${ht}`,role:"img"},host);
+    try{ host._draw(svg,w,ht); }catch(err){ console.error(id,err); }
   };
-  render();
-  if(!host._ro){ host._ro=new ResizeObserver(()=>{clearTimeout(host._t);host._t=setTimeout(render,80);}); host._ro.observe(host); }
+  host._paint();
+  if(!host._ro){
+    host._ro=new ResizeObserver(()=>{clearTimeout(host._t);host._t=setTimeout(()=>host._paint(),80);});
+    host._ro.observe(host);
+  }
 }
 /* Axis scales land on round numbers: pick a 1/2/2.5/5/10 step first,
    then stretch the maximum up to a whole multiple of it. */
