@@ -102,7 +102,24 @@ Two charts depart from the obvious choice for honesty reasons. The inventory sca
 |---|---|
 | `index.html` | The dashboard. Self-contained; open it directly or view the live link above. |
 | `Raw Data/` | The source extracts the analysis is built from. |
+| `Processed data/` | The Excel workbook where the planning calculations live. |
 | `docs/` | Page screenshots. |
+
+### Processed data
+
+`Aerospace_Materials_Planning_and_Supply_Chain_analysis.xlsx` is the working
+analysis, and the layer between the raw extracts and the dashboard. Its sheets:
+
+| Sheet | What it holds |
+|---|---|
+| `Inventory_Planning` | The planning model, one row per part–site: usable inventory, due-in, months of cover, lead-time demand, target service level, demand standard deviation, safety stock, reorder point, target stock level, replenishment status and recommended order quantity. |
+| `All_Part_Site_Forecast` | 36 months of consumption per plan, the 2025 three-month moving-average forecast, and the forecast change against 2024. |
+| `All_Part_Site_Demand` | Monthly demand pivot by part–site. |
+| `Demand_Forcast` | The forecast method worked through for a single plan, with its mean absolute error. |
+| `Supply_History`, `Purchase_Orders` | The raw extracts, carried inside the workbook as the pivot sources. |
+
+Every figure on the dashboard traces back to these sheets. The supplier metrics
+were validated against the workbook's own grand totals — see the table above.
 
 ### Raw Data
 
