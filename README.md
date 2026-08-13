@@ -103,7 +103,26 @@ Two charts depart from the obvious choice for honesty reasons. The inventory sca
 | `index.html` | The dashboard. Self-contained; open it directly or view the live link above. |
 | `Raw Data/` | The source extracts the analysis is built from. |
 | `Processed data/` | The Excel workbook where the planning calculations live. |
+| `Excel_Workbook_Documentation.docx` | How the workbook was built — every formula, step and assumption. |
 | `docs/` | Page screenshots. |
+
+### Workbook documentation
+
+`Excel_Workbook_Documentation.docx` is the write-up of the Excel model: the
+analytical logic, structure, formulas, assumptions and business interpretation
+behind every figure. It covers the part–site key and the XLOOKUP enrichment of
+the history table, monthly demand aggregation and the three-month moving-average
+forecast with its MAE check, then the full replenishment chain — usable
+inventory, months of cover, lead-time demand, criticality-based service levels,
+Z-score and safety stock, reorder point, due-ins, inventory position, target
+stock and recommended order quantity — worked end to end on a single part–site,
+followed by the purchase-order measures behind the supplier scorecard.
+
+It also states its own limits: the A/B/C service targets of 99% / 95% / 90% are
+project assumptions rather than organisational policy, safety stock does not
+model lead-time variability, due-ins are reconstructed from later receipt dates
+as a proxy for open supply at the 23-Dec-2024 snapshot, and the dataset is
+simulated rather than operational data from any organisation.
 
 ### Processed data
 
