@@ -101,7 +101,17 @@ Two charts depart from the obvious choice for honesty reasons. The inventory sca
 | File | Purpose |
 |---|---|
 | `index.html` | The dashboard. Self-contained; open it directly or view the live link above. |
+| `Raw Data/` | The source extracts the analysis is built from. |
 | `docs/` | Page screenshots. |
+
+### Raw Data
+
+| File | Contents |
+|---|---|
+| `Parts_Master.xlsx` | 300 parts — family, criticality class, unit cost, planning lead time, primary supplier, supplier risk class, repairability, shelf life. |
+| `Purchase_Orders.xlsx` | 29,666 purchase order lines, 2022–2024 — order, promised and receipt dates with ordered and received quantities. Every supplier metric on page 4 derives from these. |
+| `Quality_Incidents.xlsx` | Defect records by part, supplier and site, with severity, defect type and scrap quantity. |
+| `Supply_Chain_History.xlsx` | Weekly demand and stock history by part and site — consumption, on-hand, backorder and blocked quantities, plus the forecast basis. |
 
 ## Tech
 
